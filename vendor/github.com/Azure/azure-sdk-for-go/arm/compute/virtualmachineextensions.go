@@ -58,8 +58,10 @@ func (client VirtualMachineExtensionsClient) CreateOrUpdate(resourceGroupName st
 		var err error
 		var result VirtualMachineExtension
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -93,7 +95,7 @@ func (client VirtualMachineExtensionsClient) CreateOrUpdatePreparer(resourceGrou
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2016-04-30-preview"
+	const APIVersion = "2016-03-30"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -144,8 +146,10 @@ func (client VirtualMachineExtensionsClient) Delete(resourceGroupName string, VM
 		var err error
 		var result OperationStatusResponse
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -179,7 +183,7 @@ func (client VirtualMachineExtensionsClient) DeletePreparer(resourceGroupName st
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2016-04-30-preview"
+	const APIVersion = "2016-03-30"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -250,7 +254,7 @@ func (client VirtualMachineExtensionsClient) GetPreparer(resourceGroupName strin
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2016-04-30-preview"
+	const APIVersion = "2016-03-30"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}

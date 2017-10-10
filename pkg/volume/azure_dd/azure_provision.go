@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/golang/glog"
+
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -162,6 +164,7 @@ func (p *azureDiskProvisioner) Provision() (*v1.PersistentVolume, error) {
 					return nil, fmt.Errorf("AzureDisk - location(%s) and account(%s) must be both empty or specified for dedicated kind, only one value specified is not allowed",
 						location, account)
 				}
+				glog.V(2).Infof("Name: %s, skuName: %s, requestGB: %s, forceStandAlone: %s", name, skuName, requestGB, forceStandAlone)
 				diskURI, err = diskController.CreateBlobDisk(name, skuName, requestGB, forceStandAlone)
 				if err != nil {
 					return nil, err

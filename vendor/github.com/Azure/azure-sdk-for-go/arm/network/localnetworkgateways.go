@@ -21,11 +21,14 @@ package network
 import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/go-autorest/autorest/validation"
 	"net/http"
 )
 
-// LocalNetworkGatewaysClient is the composite Swagger for Network Client
+// LocalNetworkGatewaysClient is the the Windows Azure Network management API
+// provides a RESTful set of web services that interact with Windows Azure
+// Networks service to manage your network resrources. The API has entities
+// that capture the relationship between an end user and the Windows Azure
+// Networks service.
 type LocalNetworkGatewaysClient struct {
 	ManagementClient
 }
@@ -42,34 +45,27 @@ func NewLocalNetworkGatewaysClientWithBaseURI(baseURI string, subscriptionID str
 	return LocalNetworkGatewaysClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
 
-// CreateOrUpdate creates or updates a local network gateway in the specified
-// resource group. This method may poll for completion. Polling can be canceled
-// by passing the cancel channel argument. The channel will be used to cancel
+// CreateOrUpdate the Put LocalNetworkGateway operation creates/updates a local
+// network gateway in the specified resource group through Network resource
+// provider. This method may poll for completion. Polling can be canceled by
+// passing the cancel channel argument. The channel will be used to cancel
 // polling and any outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. localNetworkGatewayName
 // is the name of the local network gateway. parameters is parameters supplied
-// to the create or update local network gateway operation.
+// to the Begin Create or update Local Network Gateway operation through
+// Network resource provider.
 func (client LocalNetworkGatewaysClient) CreateOrUpdate(resourceGroupName string, localNetworkGatewayName string, parameters LocalNetworkGateway, cancel <-chan struct{}) (<-chan LocalNetworkGateway, <-chan error) {
 	resultChan := make(chan LocalNetworkGateway, 1)
 	errChan := make(chan error, 1)
-	if err := validation.Validate([]validation.Validation{
-		{TargetValue: localNetworkGatewayName,
-			Constraints: []validation.Constraint{{Target: "localNetworkGatewayName", Name: validation.MinLength, Rule: 1, Chain: nil}}},
-		{TargetValue: parameters,
-			Constraints: []validation.Constraint{{Target: "parameters.LocalNetworkGatewayPropertiesFormat", Name: validation.Null, Rule: true, Chain: nil}}}}); err != nil {
-		errChan <- validation.NewErrorWithValidationError(err, "network.LocalNetworkGatewaysClient", "CreateOrUpdate")
-		close(errChan)
-		close(resultChan)
-		return resultChan, errChan
-	}
-
 	go func() {
 		var err error
 		var result LocalNetworkGateway
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -102,7 +98,7 @@ func (client LocalNetworkGatewaysClient) CreateOrUpdatePreparer(resourceGroupNam
 		"subscriptionId":          autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -138,7 +134,8 @@ func (client LocalNetworkGatewaysClient) CreateOrUpdateResponder(resp *http.Resp
 	return
 }
 
-// Delete deletes the specified local network gateway. This method may poll for
+// Delete the Delete LocalNetworkGateway operation deletes the specifed local
+// network Gateway through Network resource provider. This method may poll for
 // completion. Polling can be canceled by passing the cancel channel argument.
 // The channel will be used to cancel polling and any outstanding HTTP
 // requests.
@@ -148,21 +145,14 @@ func (client LocalNetworkGatewaysClient) CreateOrUpdateResponder(resp *http.Resp
 func (client LocalNetworkGatewaysClient) Delete(resourceGroupName string, localNetworkGatewayName string, cancel <-chan struct{}) (<-chan autorest.Response, <-chan error) {
 	resultChan := make(chan autorest.Response, 1)
 	errChan := make(chan error, 1)
-	if err := validation.Validate([]validation.Validation{
-		{TargetValue: localNetworkGatewayName,
-			Constraints: []validation.Constraint{{Target: "localNetworkGatewayName", Name: validation.MinLength, Rule: 1, Chain: nil}}}}); err != nil {
-		errChan <- validation.NewErrorWithValidationError(err, "network.LocalNetworkGatewaysClient", "Delete")
-		close(errChan)
-		close(resultChan)
-		return resultChan, errChan
-	}
-
 	go func() {
 		var err error
 		var result autorest.Response
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -195,7 +185,7 @@ func (client LocalNetworkGatewaysClient) DeletePreparer(resourceGroupName string
 		"subscriptionId":          autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -203,7 +193,7 @@ func (client LocalNetworkGatewaysClient) DeletePreparer(resourceGroupName string
 	preparer := autorest.CreatePreparer(
 		autorest.AsDelete(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/localNetworkGateways/{localNetworkGatewayName}", pathParameters),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/localNetworkGateways/{localNetworkGatewayName}/", pathParameters),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare(&http.Request{Cancel: cancel})
 }
@@ -222,23 +212,18 @@ func (client LocalNetworkGatewaysClient) DeleteResponder(resp *http.Response) (r
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusNoContent, http.StatusOK, http.StatusAccepted),
+		azure.WithErrorUnlessStatusCode(http.StatusNoContent, http.StatusAccepted, http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
 	return
 }
 
-// Get gets the specified local network gateway in a resource group.
+// Get the Get LocalNetworkGateway operation retrieves information about the
+// specified local network gateway through Network resource provider.
 //
 // resourceGroupName is the name of the resource group. localNetworkGatewayName
 // is the name of the local network gateway.
 func (client LocalNetworkGatewaysClient) Get(resourceGroupName string, localNetworkGatewayName string) (result LocalNetworkGateway, err error) {
-	if err := validation.Validate([]validation.Validation{
-		{TargetValue: localNetworkGatewayName,
-			Constraints: []validation.Constraint{{Target: "localNetworkGatewayName", Name: validation.MinLength, Rule: 1, Chain: nil}}}}); err != nil {
-		return result, validation.NewErrorWithValidationError(err, "network.LocalNetworkGatewaysClient", "Get")
-	}
-
 	req, err := client.GetPreparer(resourceGroupName, localNetworkGatewayName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "network.LocalNetworkGatewaysClient", "Get", nil, "Failure preparing request")
@@ -268,7 +253,7 @@ func (client LocalNetworkGatewaysClient) GetPreparer(resourceGroupName string, l
 		"subscriptionId":          autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -300,7 +285,8 @@ func (client LocalNetworkGatewaysClient) GetResponder(resp *http.Response) (resu
 	return
 }
 
-// List gets all the local network gateways in a resource group.
+// List the List LocalNetworkGateways opertion retrieves all the local network
+// gateways stored.
 //
 // resourceGroupName is the name of the resource group.
 func (client LocalNetworkGatewaysClient) List(resourceGroupName string) (result LocalNetworkGatewayListResult, err error) {
@@ -332,7 +318,7 @@ func (client LocalNetworkGatewaysClient) ListPreparer(resourceGroupName string) 
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -386,4 +372,49 @@ func (client LocalNetworkGatewaysClient) ListNextResults(lastResults LocalNetwor
 	}
 
 	return
+}
+
+// ListComplete gets all elements from the list without paging.
+func (client LocalNetworkGatewaysClient) ListComplete(resourceGroupName string, cancel <-chan struct{}) (<-chan LocalNetworkGateway, <-chan error) {
+	resultChan := make(chan LocalNetworkGateway)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.List(resourceGroupName)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
 }

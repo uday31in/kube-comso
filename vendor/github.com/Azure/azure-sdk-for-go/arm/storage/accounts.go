@@ -19,13 +19,14 @@ package storage
 // regenerated.
 
 import (
+	"net/http"
+
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"net/http"
 )
 
-// AccountsClient is the the Azure Storage Management API.
+// AccountsClient is the the Storage Management Client.
 type AccountsClient struct {
 	ManagementClient
 }
@@ -82,7 +83,7 @@ func (client AccountsClient) CheckNameAvailabilityPreparer(accountName AccountCh
 		"subscriptionId": autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2016-12-01"
+	const APIVersion = "2016-01-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -126,19 +127,14 @@ func (client AccountsClient) CheckNameAvailabilityResponder(resp *http.Response)
 // outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group within the user's
-// subscription. The name is case insensitive. accountName is the name of the
-// storage account within the specified resource group. Storage account names
-// must be between 3 and 24 characters in length and use numbers and lower-case
-// letters only. parameters is the parameters to provide for the created
-// account.
+// subscription. accountName is the name of the storage account within the
+// specified resource group. Storage account names must be between 3 and 24
+// characters in length and use numbers and lower-case letters only. parameters
+// is the parameters to provide for the created account.
 func (client AccountsClient) Create(resourceGroupName string, accountName string, parameters AccountCreateParameters, cancel <-chan struct{}) (<-chan Account, <-chan error) {
 	resultChan := make(chan Account, 1)
 	errChan := make(chan error, 1)
 	if err := validation.Validate([]validation.Validation{
-		{TargetValue: resourceGroupName,
-			Constraints: []validation.Constraint{{Target: "resourceGroupName", Name: validation.MaxLength, Rule: 90, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.MinLength, Rule: 1, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.Pattern, Rule: `^[-\w\._\(\)]+$`, Chain: nil}}},
 		{TargetValue: accountName,
 			Constraints: []validation.Constraint{{Target: "accountName", Name: validation.MaxLength, Rule: 24, Chain: nil},
 				{Target: "accountName", Name: validation.MinLength, Rule: 3, Chain: nil}}},
@@ -161,8 +157,10 @@ func (client AccountsClient) Create(resourceGroupName string, accountName string
 		var err error
 		var result Account
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -195,7 +193,7 @@ func (client AccountsClient) CreatePreparer(resourceGroupName string, accountNam
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2016-12-01"
+	const APIVersion = "2016-01-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -234,16 +232,11 @@ func (client AccountsClient) CreateResponder(resp *http.Response) (result Accoun
 // Delete deletes a storage account in Microsoft Azure.
 //
 // resourceGroupName is the name of the resource group within the user's
-// subscription. The name is case insensitive. accountName is the name of the
-// storage account within the specified resource group. Storage account names
-// must be between 3 and 24 characters in length and use numbers and lower-case
-// letters only.
+// subscription. accountName is the name of the storage account within the
+// specified resource group. Storage account names must be between 3 and 24
+// characters in length and use numbers and lower-case letters only.
 func (client AccountsClient) Delete(resourceGroupName string, accountName string) (result autorest.Response, err error) {
 	if err := validation.Validate([]validation.Validation{
-		{TargetValue: resourceGroupName,
-			Constraints: []validation.Constraint{{Target: "resourceGroupName", Name: validation.MaxLength, Rule: 90, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.MinLength, Rule: 1, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.Pattern, Rule: `^[-\w\._\(\)]+$`, Chain: nil}}},
 		{TargetValue: accountName,
 			Constraints: []validation.Constraint{{Target: "accountName", Name: validation.MaxLength, Rule: 24, Chain: nil},
 				{Target: "accountName", Name: validation.MinLength, Rule: 3, Chain: nil}}}}); err != nil {
@@ -279,7 +272,7 @@ func (client AccountsClient) DeletePreparer(resourceGroupName string, accountNam
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2016-12-01"
+	const APIVersion = "2016-01-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -315,16 +308,11 @@ func (client AccountsClient) DeleteResponder(resp *http.Response) (result autore
 // The ListKeys operation should be used to retrieve storage keys.
 //
 // resourceGroupName is the name of the resource group within the user's
-// subscription. The name is case insensitive. accountName is the name of the
-// storage account within the specified resource group. Storage account names
-// must be between 3 and 24 characters in length and use numbers and lower-case
-// letters only.
+// subscription. accountName is the name of the storage account within the
+// specified resource group. Storage account names must be between 3 and 24
+// characters in length and use numbers and lower-case letters only.
 func (client AccountsClient) GetProperties(resourceGroupName string, accountName string) (result Account, err error) {
 	if err := validation.Validate([]validation.Validation{
-		{TargetValue: resourceGroupName,
-			Constraints: []validation.Constraint{{Target: "resourceGroupName", Name: validation.MaxLength, Rule: 90, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.MinLength, Rule: 1, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.Pattern, Rule: `^[-\w\._\(\)]+$`, Chain: nil}}},
 		{TargetValue: accountName,
 			Constraints: []validation.Constraint{{Target: "accountName", Name: validation.MaxLength, Rule: 24, Chain: nil},
 				{Target: "accountName", Name: validation.MinLength, Rule: 3, Chain: nil}}}}); err != nil {
@@ -360,7 +348,7 @@ func (client AccountsClient) GetPropertiesPreparer(resourceGroupName string, acc
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2016-12-01"
+	const APIVersion = "2016-01-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -422,7 +410,7 @@ func (client AccountsClient) ListPreparer() (*http.Request, error) {
 		"subscriptionId": autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2016-12-01"
+	const APIVersion = "2016-01-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -454,106 +442,13 @@ func (client AccountsClient) ListResponder(resp *http.Response) (result AccountL
 	return
 }
 
-// ListAccountSAS list SAS credentials of a storage account.
-//
-// resourceGroupName is the name of the resource group within the user's
-// subscription. The name is case insensitive. accountName is the name of the
-// storage account within the specified resource group. Storage account names
-// must be between 3 and 24 characters in length and use numbers and lower-case
-// letters only. parameters is the parameters to provide to list SAS
-// credentials for the storage account.
-func (client AccountsClient) ListAccountSAS(resourceGroupName string, accountName string, parameters AccountSasParameters) (result ListAccountSasResponse, err error) {
-	if err := validation.Validate([]validation.Validation{
-		{TargetValue: resourceGroupName,
-			Constraints: []validation.Constraint{{Target: "resourceGroupName", Name: validation.MaxLength, Rule: 90, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.MinLength, Rule: 1, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.Pattern, Rule: `^[-\w\._\(\)]+$`, Chain: nil}}},
-		{TargetValue: accountName,
-			Constraints: []validation.Constraint{{Target: "accountName", Name: validation.MaxLength, Rule: 24, Chain: nil},
-				{Target: "accountName", Name: validation.MinLength, Rule: 3, Chain: nil}}},
-		{TargetValue: parameters,
-			Constraints: []validation.Constraint{{Target: "parameters.SharedAccessExpiryTime", Name: validation.Null, Rule: true, Chain: nil}}}}); err != nil {
-		return result, validation.NewErrorWithValidationError(err, "storage.AccountsClient", "ListAccountSAS")
-	}
-
-	req, err := client.ListAccountSASPreparer(resourceGroupName, accountName, parameters)
-	if err != nil {
-		err = autorest.NewErrorWithError(err, "storage.AccountsClient", "ListAccountSAS", nil, "Failure preparing request")
-		return
-	}
-
-	resp, err := client.ListAccountSASSender(req)
-	if err != nil {
-		result.Response = autorest.Response{Response: resp}
-		err = autorest.NewErrorWithError(err, "storage.AccountsClient", "ListAccountSAS", resp, "Failure sending request")
-		return
-	}
-
-	result, err = client.ListAccountSASResponder(resp)
-	if err != nil {
-		err = autorest.NewErrorWithError(err, "storage.AccountsClient", "ListAccountSAS", resp, "Failure responding to request")
-	}
-
-	return
-}
-
-// ListAccountSASPreparer prepares the ListAccountSAS request.
-func (client AccountsClient) ListAccountSASPreparer(resourceGroupName string, accountName string, parameters AccountSasParameters) (*http.Request, error) {
-	pathParameters := map[string]interface{}{
-		"accountName":       autorest.Encode("path", accountName),
-		"resourceGroupName": autorest.Encode("path", resourceGroupName),
-		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
-	}
-
-	const APIVersion = "2016-12-01"
-	queryParameters := map[string]interface{}{
-		"api-version": APIVersion,
-	}
-
-	preparer := autorest.CreatePreparer(
-		autorest.AsJSON(),
-		autorest.AsPost(),
-		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{accountName}/ListAccountSas", pathParameters),
-		autorest.WithJSON(parameters),
-		autorest.WithQueryParameters(queryParameters))
-	return preparer.Prepare(&http.Request{})
-}
-
-// ListAccountSASSender sends the ListAccountSAS request. The method will close the
-// http.Response Body if it receives an error.
-func (client AccountsClient) ListAccountSASSender(req *http.Request) (*http.Response, error) {
-	return autorest.SendWithSender(client, req)
-}
-
-// ListAccountSASResponder handles the response to the ListAccountSAS request. The method always
-// closes the http.Response Body.
-func (client AccountsClient) ListAccountSASResponder(resp *http.Response) (result ListAccountSasResponse, err error) {
-	err = autorest.Respond(
-		resp,
-		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusOK),
-		autorest.ByUnmarshallingJSON(&result),
-		autorest.ByClosing())
-	result.Response = autorest.Response{Response: resp}
-	return
-}
-
 // ListByResourceGroup lists all the storage accounts available under the given
 // resource group. Note that storage keys are not returned; use the ListKeys
 // operation for this.
 //
 // resourceGroupName is the name of the resource group within the user's
-// subscription. The name is case insensitive.
+// subscription.
 func (client AccountsClient) ListByResourceGroup(resourceGroupName string) (result AccountListResult, err error) {
-	if err := validation.Validate([]validation.Validation{
-		{TargetValue: resourceGroupName,
-			Constraints: []validation.Constraint{{Target: "resourceGroupName", Name: validation.MaxLength, Rule: 90, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.MinLength, Rule: 1, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.Pattern, Rule: `^[-\w\._\(\)]+$`, Chain: nil}}}}); err != nil {
-		return result, validation.NewErrorWithValidationError(err, "storage.AccountsClient", "ListByResourceGroup")
-	}
-
 	req, err := client.ListByResourceGroupPreparer(resourceGroupName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "storage.AccountsClient", "ListByResourceGroup", nil, "Failure preparing request")
@@ -582,7 +477,7 @@ func (client AccountsClient) ListByResourceGroupPreparer(resourceGroupName strin
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2016-12-01"
+	const APIVersion = "2016-01-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -617,16 +512,11 @@ func (client AccountsClient) ListByResourceGroupResponder(resp *http.Response) (
 // ListKeys lists the access keys for the specified storage account.
 //
 // resourceGroupName is the name of the resource group within the user's
-// subscription. The name is case insensitive. accountName is the name of the
-// storage account within the specified resource group. Storage account names
-// must be between 3 and 24 characters in length and use numbers and lower-case
-// letters only.
+// subscription. accountName is the name of the storage account within the
+// specified resource group. Storage account names must be between 3 and 24
+// characters in length and use numbers and lower-case letters only.
 func (client AccountsClient) ListKeys(resourceGroupName string, accountName string) (result AccountListKeysResult, err error) {
 	if err := validation.Validate([]validation.Validation{
-		{TargetValue: resourceGroupName,
-			Constraints: []validation.Constraint{{Target: "resourceGroupName", Name: validation.MaxLength, Rule: 90, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.MinLength, Rule: 1, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.Pattern, Rule: `^[-\w\._\(\)]+$`, Chain: nil}}},
 		{TargetValue: accountName,
 			Constraints: []validation.Constraint{{Target: "accountName", Name: validation.MaxLength, Rule: 24, Chain: nil},
 				{Target: "accountName", Name: validation.MinLength, Rule: 3, Chain: nil}}}}); err != nil {
@@ -662,7 +552,7 @@ func (client AccountsClient) ListKeysPreparer(resourceGroupName string, accountN
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2016-12-01"
+	const APIVersion = "2016-01-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -694,108 +584,17 @@ func (client AccountsClient) ListKeysResponder(resp *http.Response) (result Acco
 	return
 }
 
-// ListServiceSAS list service SAS credentials of a specific resource.
-//
-// resourceGroupName is the name of the resource group within the user's
-// subscription. The name is case insensitive. accountName is the name of the
-// storage account within the specified resource group. Storage account names
-// must be between 3 and 24 characters in length and use numbers and lower-case
-// letters only. parameters is the parameters to provide to list service SAS
-// credentials.
-func (client AccountsClient) ListServiceSAS(resourceGroupName string, accountName string, parameters ServiceSasParameters) (result ListServiceSasResponse, err error) {
-	if err := validation.Validate([]validation.Validation{
-		{TargetValue: resourceGroupName,
-			Constraints: []validation.Constraint{{Target: "resourceGroupName", Name: validation.MaxLength, Rule: 90, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.MinLength, Rule: 1, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.Pattern, Rule: `^[-\w\._\(\)]+$`, Chain: nil}}},
-		{TargetValue: accountName,
-			Constraints: []validation.Constraint{{Target: "accountName", Name: validation.MaxLength, Rule: 24, Chain: nil},
-				{Target: "accountName", Name: validation.MinLength, Rule: 3, Chain: nil}}},
-		{TargetValue: parameters,
-			Constraints: []validation.Constraint{{Target: "parameters.CanonicalizedResource", Name: validation.Null, Rule: true, Chain: nil},
-				{Target: "parameters.Identifier", Name: validation.Null, Rule: false,
-					Chain: []validation.Constraint{{Target: "parameters.Identifier", Name: validation.MaxLength, Rule: 64, Chain: nil}}}}}}); err != nil {
-		return result, validation.NewErrorWithValidationError(err, "storage.AccountsClient", "ListServiceSAS")
-	}
-
-	req, err := client.ListServiceSASPreparer(resourceGroupName, accountName, parameters)
-	if err != nil {
-		err = autorest.NewErrorWithError(err, "storage.AccountsClient", "ListServiceSAS", nil, "Failure preparing request")
-		return
-	}
-
-	resp, err := client.ListServiceSASSender(req)
-	if err != nil {
-		result.Response = autorest.Response{Response: resp}
-		err = autorest.NewErrorWithError(err, "storage.AccountsClient", "ListServiceSAS", resp, "Failure sending request")
-		return
-	}
-
-	result, err = client.ListServiceSASResponder(resp)
-	if err != nil {
-		err = autorest.NewErrorWithError(err, "storage.AccountsClient", "ListServiceSAS", resp, "Failure responding to request")
-	}
-
-	return
-}
-
-// ListServiceSASPreparer prepares the ListServiceSAS request.
-func (client AccountsClient) ListServiceSASPreparer(resourceGroupName string, accountName string, parameters ServiceSasParameters) (*http.Request, error) {
-	pathParameters := map[string]interface{}{
-		"accountName":       autorest.Encode("path", accountName),
-		"resourceGroupName": autorest.Encode("path", resourceGroupName),
-		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
-	}
-
-	const APIVersion = "2016-12-01"
-	queryParameters := map[string]interface{}{
-		"api-version": APIVersion,
-	}
-
-	preparer := autorest.CreatePreparer(
-		autorest.AsJSON(),
-		autorest.AsPost(),
-		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{accountName}/ListServiceSas", pathParameters),
-		autorest.WithJSON(parameters),
-		autorest.WithQueryParameters(queryParameters))
-	return preparer.Prepare(&http.Request{})
-}
-
-// ListServiceSASSender sends the ListServiceSAS request. The method will close the
-// http.Response Body if it receives an error.
-func (client AccountsClient) ListServiceSASSender(req *http.Request) (*http.Response, error) {
-	return autorest.SendWithSender(client, req)
-}
-
-// ListServiceSASResponder handles the response to the ListServiceSAS request. The method always
-// closes the http.Response Body.
-func (client AccountsClient) ListServiceSASResponder(resp *http.Response) (result ListServiceSasResponse, err error) {
-	err = autorest.Respond(
-		resp,
-		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusOK),
-		autorest.ByUnmarshallingJSON(&result),
-		autorest.ByClosing())
-	result.Response = autorest.Response{Response: resp}
-	return
-}
-
 // RegenerateKey regenerates one of the access keys for the specified storage
 // account.
 //
 // resourceGroupName is the name of the resource group within the user's
-// subscription. The name is case insensitive. accountName is the name of the
-// storage account within the specified resource group. Storage account names
-// must be between 3 and 24 characters in length and use numbers and lower-case
-// letters only. regenerateKey is specifies name of the key which should be
-// regenerated -- key1 or key2.
+// subscription. accountName is the name of the storage account within the
+// specified resource group. Storage account names must be between 3 and 24
+// characters in length and use numbers and lower-case letters only.
+// regenerateKey is specifies name of the key which should be regenerated --
+// key1 or key2.
 func (client AccountsClient) RegenerateKey(resourceGroupName string, accountName string, regenerateKey AccountRegenerateKeyParameters) (result AccountListKeysResult, err error) {
 	if err := validation.Validate([]validation.Validation{
-		{TargetValue: resourceGroupName,
-			Constraints: []validation.Constraint{{Target: "resourceGroupName", Name: validation.MaxLength, Rule: 90, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.MinLength, Rule: 1, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.Pattern, Rule: `^[-\w\._\(\)]+$`, Chain: nil}}},
 		{TargetValue: accountName,
 			Constraints: []validation.Constraint{{Target: "accountName", Name: validation.MaxLength, Rule: 24, Chain: nil},
 				{Target: "accountName", Name: validation.MinLength, Rule: 3, Chain: nil}}},
@@ -833,7 +632,7 @@ func (client AccountsClient) RegenerateKeyPreparer(resourceGroupName string, acc
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2016-12-01"
+	const APIVersion = "2016-01-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -879,17 +678,12 @@ func (client AccountsClient) RegenerateKeyResponder(resp *http.Response) (result
 // after creation.
 //
 // resourceGroupName is the name of the resource group within the user's
-// subscription. The name is case insensitive. accountName is the name of the
-// storage account within the specified resource group. Storage account names
-// must be between 3 and 24 characters in length and use numbers and lower-case
-// letters only. parameters is the parameters to provide for the updated
-// account.
+// subscription. accountName is the name of the storage account within the
+// specified resource group. Storage account names must be between 3 and 24
+// characters in length and use numbers and lower-case letters only. parameters
+// is the parameters to provide for the updated account.
 func (client AccountsClient) Update(resourceGroupName string, accountName string, parameters AccountUpdateParameters) (result Account, err error) {
 	if err := validation.Validate([]validation.Validation{
-		{TargetValue: resourceGroupName,
-			Constraints: []validation.Constraint{{Target: "resourceGroupName", Name: validation.MaxLength, Rule: 90, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.MinLength, Rule: 1, Chain: nil},
-				{Target: "resourceGroupName", Name: validation.Pattern, Rule: `^[-\w\._\(\)]+$`, Chain: nil}}},
 		{TargetValue: accountName,
 			Constraints: []validation.Constraint{{Target: "accountName", Name: validation.MaxLength, Rule: 24, Chain: nil},
 				{Target: "accountName", Name: validation.MinLength, Rule: 3, Chain: nil}}}}); err != nil {
@@ -925,7 +719,7 @@ func (client AccountsClient) UpdatePreparer(resourceGroupName string, accountNam
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2016-12-01"
+	const APIVersion = "2016-01-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}

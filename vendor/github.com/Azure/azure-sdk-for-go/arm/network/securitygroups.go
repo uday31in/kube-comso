@@ -19,12 +19,17 @@ package network
 // regenerated.
 
 import (
+	"net/http"
+
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"net/http"
 )
 
-// SecurityGroupsClient is the composite Swagger for Network Client
+// SecurityGroupsClient is the the Windows Azure Network management API
+// provides a RESTful set of web services that interact with Windows Azure
+// Networks service to manage your network resrources. The API has entities
+// that capture the relationship between an end user and the Windows Azure
+// Networks service.
 type SecurityGroupsClient struct {
 	ManagementClient
 }
@@ -41,15 +46,16 @@ func NewSecurityGroupsClientWithBaseURI(baseURI string, subscriptionID string) S
 	return SecurityGroupsClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
 
-// CreateOrUpdate creates or updates a network security group in the specified
-// resource group. This method may poll for completion. Polling can be canceled
-// by passing the cancel channel argument. The channel will be used to cancel
-// polling and any outstanding HTTP requests.
+// CreateOrUpdate the Put NetworkSecurityGroup operation creates/updates a
+// network security groupin the specified resource group. This method may poll
+// for completion. Polling can be canceled by passing the cancel channel
+// argument. The channel will be used to cancel polling and any outstanding
+// HTTP requests.
 //
 // resourceGroupName is the name of the resource group.
 // networkSecurityGroupName is the name of the network security group.
-// parameters is parameters supplied to the create or update network security
-// group operation.
+// parameters is parameters supplied to the create/update Network Security
+// Group operation
 func (client SecurityGroupsClient) CreateOrUpdate(resourceGroupName string, networkSecurityGroupName string, parameters SecurityGroup, cancel <-chan struct{}) (<-chan SecurityGroup, <-chan error) {
 	resultChan := make(chan SecurityGroup, 1)
 	errChan := make(chan error, 1)
@@ -57,8 +63,10 @@ func (client SecurityGroupsClient) CreateOrUpdate(resourceGroupName string, netw
 		var err error
 		var result SecurityGroup
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -91,7 +99,7 @@ func (client SecurityGroupsClient) CreateOrUpdatePreparer(resourceGroupName stri
 		"subscriptionId":           autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -127,10 +135,10 @@ func (client SecurityGroupsClient) CreateOrUpdateResponder(resp *http.Response) 
 	return
 }
 
-// Delete deletes the specified network security group. This method may poll
-// for completion. Polling can be canceled by passing the cancel channel
-// argument. The channel will be used to cancel polling and any outstanding
-// HTTP requests.
+// Delete the Delete NetworkSecurityGroup operation deletes the specifed
+// network security group This method may poll for completion. Polling can be
+// canceled by passing the cancel channel argument. The channel will be used to
+// cancel polling and any outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group.
 // networkSecurityGroupName is the name of the network security group.
@@ -141,8 +149,10 @@ func (client SecurityGroupsClient) Delete(resourceGroupName string, networkSecur
 		var err error
 		var result autorest.Response
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -175,7 +185,7 @@ func (client SecurityGroupsClient) DeletePreparer(resourceGroupName string, netw
 		"subscriptionId":           autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -202,19 +212,19 @@ func (client SecurityGroupsClient) DeleteResponder(resp *http.Response) (result 
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusAccepted, http.StatusOK, http.StatusNoContent),
+		azure.WithErrorUnlessStatusCode(http.StatusNoContent, http.StatusAccepted, http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
 	return
 }
 
-// Get gets the specified network security group.
+// Get the Get NetworkSecurityGroups operation retrieves information about the
+// specified network security group.
 //
 // resourceGroupName is the name of the resource group.
-// networkSecurityGroupName is the name of the network security group. expand
-// is expands referenced resources.
-func (client SecurityGroupsClient) Get(resourceGroupName string, networkSecurityGroupName string, expand string) (result SecurityGroup, err error) {
-	req, err := client.GetPreparer(resourceGroupName, networkSecurityGroupName, expand)
+// networkSecurityGroupName is the name of the network security group.
+func (client SecurityGroupsClient) Get(resourceGroupName string, networkSecurityGroupName string, nope string) (result SecurityGroup, err error) {
+	req, err := client.GetPreparer(resourceGroupName, networkSecurityGroupName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "network.SecurityGroupsClient", "Get", nil, "Failure preparing request")
 		return
@@ -236,19 +246,16 @@ func (client SecurityGroupsClient) Get(resourceGroupName string, networkSecurity
 }
 
 // GetPreparer prepares the Get request.
-func (client SecurityGroupsClient) GetPreparer(resourceGroupName string, networkSecurityGroupName string, expand string) (*http.Request, error) {
+func (client SecurityGroupsClient) GetPreparer(resourceGroupName string, networkSecurityGroupName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"networkSecurityGroupName": autorest.Encode("path", networkSecurityGroupName),
 		"resourceGroupName":        autorest.Encode("path", resourceGroupName),
 		"subscriptionId":           autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
-	}
-	if len(expand) > 0 {
-		queryParameters["$expand"] = autorest.Encode("query", expand)
 	}
 
 	preparer := autorest.CreatePreparer(
@@ -278,7 +285,8 @@ func (client SecurityGroupsClient) GetResponder(resp *http.Response) (result Sec
 	return
 }
 
-// List gets all network security groups in a resource group.
+// List the list NetworkSecurityGroups returns all network security groups in a
+// resource group
 //
 // resourceGroupName is the name of the resource group.
 func (client SecurityGroupsClient) List(resourceGroupName string) (result SecurityGroupListResult, err error) {
@@ -310,7 +318,7 @@ func (client SecurityGroupsClient) ListPreparer(resourceGroupName string) (*http
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -366,7 +374,53 @@ func (client SecurityGroupsClient) ListNextResults(lastResults SecurityGroupList
 	return
 }
 
-// ListAll gets all network security groups in a subscription.
+// ListComplete gets all elements from the list without paging.
+func (client SecurityGroupsClient) ListComplete(resourceGroupName string, cancel <-chan struct{}) (<-chan SecurityGroup, <-chan error) {
+	resultChan := make(chan SecurityGroup)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.List(resourceGroupName)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
+}
+
+// ListAll the list NetworkSecurityGroups returns all network security groups
+// in a subscription
 func (client SecurityGroupsClient) ListAll() (result SecurityGroupListResult, err error) {
 	req, err := client.ListAllPreparer()
 	if err != nil {
@@ -395,7 +449,7 @@ func (client SecurityGroupsClient) ListAllPreparer() (*http.Request, error) {
 		"subscriptionId": autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -449,4 +503,49 @@ func (client SecurityGroupsClient) ListAllNextResults(lastResults SecurityGroupL
 	}
 
 	return
+}
+
+// ListAllComplete gets all elements from the list without paging.
+func (client SecurityGroupsClient) ListAllComplete(cancel <-chan struct{}) (<-chan SecurityGroup, <-chan error) {
+	resultChan := make(chan SecurityGroup)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.ListAll()
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListAllNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
 }

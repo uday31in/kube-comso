@@ -24,8 +24,11 @@ import (
 	"net/http"
 )
 
-// ExpressRouteCircuitPeeringsClient is the composite Swagger for Network
-// Client
+// ExpressRouteCircuitPeeringsClient is the the Windows Azure Network
+// management API provides a RESTful set of web services that interact with
+// Windows Azure Networks service to manage your network resrources. The API
+// has entities that capture the relationship between an end user and the
+// Windows Azure Networks service.
 type ExpressRouteCircuitPeeringsClient struct {
 	ManagementClient
 }
@@ -42,15 +45,15 @@ func NewExpressRouteCircuitPeeringsClientWithBaseURI(baseURI string, subscriptio
 	return ExpressRouteCircuitPeeringsClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
 
-// CreateOrUpdate creates or updates a peering in the specified express route
-// circuits. This method may poll for completion. Polling can be canceled by
-// passing the cancel channel argument. The channel will be used to cancel
-// polling and any outstanding HTTP requests.
+// CreateOrUpdate the Put Pering operation creates/updates an peering in the
+// specified ExpressRouteCircuits This method may poll for completion. Polling
+// can be canceled by passing the cancel channel argument. The channel will be
+// used to cancel polling and any outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. circuitName is the name
 // of the express route circuit. peeringName is the name of the peering.
-// peeringParameters is parameters supplied to the create or update express
-// route circuit peering operation.
+// peeringParameters is parameters supplied to the create/update
+// ExpressRouteCircuit Peering operation
 func (client ExpressRouteCircuitPeeringsClient) CreateOrUpdate(resourceGroupName string, circuitName string, peeringName string, peeringParameters ExpressRouteCircuitPeering, cancel <-chan struct{}) (<-chan ExpressRouteCircuitPeering, <-chan error) {
 	resultChan := make(chan ExpressRouteCircuitPeering, 1)
 	errChan := make(chan error, 1)
@@ -58,8 +61,10 @@ func (client ExpressRouteCircuitPeeringsClient) CreateOrUpdate(resourceGroupName
 		var err error
 		var result ExpressRouteCircuitPeering
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -93,7 +98,7 @@ func (client ExpressRouteCircuitPeeringsClient) CreateOrUpdatePreparer(resourceG
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -122,17 +127,17 @@ func (client ExpressRouteCircuitPeeringsClient) CreateOrUpdateResponder(resp *ht
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
+		azure.WithErrorUnlessStatusCode(http.StatusCreated, http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
 	result.Response = autorest.Response{Response: resp}
 	return
 }
 
-// Delete deletes the specified peering from the specified express route
-// circuit. This method may poll for completion. Polling can be canceled by
-// passing the cancel channel argument. The channel will be used to cancel
-// polling and any outstanding HTTP requests.
+// Delete the delete peering operation deletes the specified peering from the
+// ExpressRouteCircuit. This method may poll for completion. Polling can be
+// canceled by passing the cancel channel argument. The channel will be used to
+// cancel polling and any outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. circuitName is the name
 // of the express route circuit. peeringName is the name of the peering.
@@ -143,8 +148,10 @@ func (client ExpressRouteCircuitPeeringsClient) Delete(resourceGroupName string,
 		var err error
 		var result autorest.Response
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -178,7 +185,7 @@ func (client ExpressRouteCircuitPeeringsClient) DeletePreparer(resourceGroupName
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -205,14 +212,14 @@ func (client ExpressRouteCircuitPeeringsClient) DeleteResponder(resp *http.Respo
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted, http.StatusNoContent),
+		azure.WithErrorUnlessStatusCode(http.StatusNoContent, http.StatusAccepted, http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
 	return
 }
 
-// Get gets the specified authorization from the specified express route
-// circuit.
+// Get the GET peering operation retrieves the specified authorization from the
+// ExpressRouteCircuit.
 //
 // resourceGroupName is the name of the resource group. circuitName is the name
 // of the express route circuit. peeringName is the name of the peering.
@@ -247,7 +254,7 @@ func (client ExpressRouteCircuitPeeringsClient) GetPreparer(resourceGroupName st
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -279,10 +286,11 @@ func (client ExpressRouteCircuitPeeringsClient) GetResponder(resp *http.Response
 	return
 }
 
-// List gets all peerings in a specified express route circuit.
+// List the List peering operation retrieves all the peerings in an
+// ExpressRouteCircuit.
 //
 // resourceGroupName is the name of the resource group. circuitName is the name
-// of the express route circuit.
+// of the curcuit.
 func (client ExpressRouteCircuitPeeringsClient) List(resourceGroupName string, circuitName string) (result ExpressRouteCircuitPeeringListResult, err error) {
 	req, err := client.ListPreparer(resourceGroupName, circuitName)
 	if err != nil {
@@ -313,7 +321,7 @@ func (client ExpressRouteCircuitPeeringsClient) ListPreparer(resourceGroupName s
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -367,4 +375,49 @@ func (client ExpressRouteCircuitPeeringsClient) ListNextResults(lastResults Expr
 	}
 
 	return
+}
+
+// ListComplete gets all elements from the list without paging.
+func (client ExpressRouteCircuitPeeringsClient) ListComplete(resourceGroupName string, circuitName string, cancel <-chan struct{}) (<-chan ExpressRouteCircuitPeering, <-chan error) {
+	resultChan := make(chan ExpressRouteCircuitPeering)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.List(resourceGroupName, circuitName)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
 }

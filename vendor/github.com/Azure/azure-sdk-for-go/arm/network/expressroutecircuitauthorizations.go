@@ -24,8 +24,11 @@ import (
 	"net/http"
 )
 
-// ExpressRouteCircuitAuthorizationsClient is the composite Swagger for Network
-// Client
+// ExpressRouteCircuitAuthorizationsClient is the the Windows Azure Network
+// management API provides a RESTful set of web services that interact with
+// Windows Azure Networks service to manage your network resrources. The API
+// has entities that capture the relationship between an end user and the
+// Windows Azure Networks service.
 type ExpressRouteCircuitAuthorizationsClient struct {
 	ManagementClient
 }
@@ -42,15 +45,16 @@ func NewExpressRouteCircuitAuthorizationsClientWithBaseURI(baseURI string, subsc
 	return ExpressRouteCircuitAuthorizationsClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
 
-// CreateOrUpdate creates or updates an authorization in the specified express
-// route circuit. This method may poll for completion. Polling can be canceled
-// by passing the cancel channel argument. The channel will be used to cancel
-// polling and any outstanding HTTP requests.
+// CreateOrUpdate the Put Authorization operation creates/updates an
+// authorization in thespecified ExpressRouteCircuits This method may poll for
+// completion. Polling can be canceled by passing the cancel channel argument.
+// The channel will be used to cancel polling and any outstanding HTTP
+// requests.
 //
 // resourceGroupName is the name of the resource group. circuitName is the name
 // of the express route circuit. authorizationName is the name of the
-// authorization. authorizationParameters is parameters supplied to the create
-// or update express route circuit authorization operation.
+// authorization. authorizationParameters is parameters supplied to the
+// create/update ExpressRouteCircuitAuthorization operation
 func (client ExpressRouteCircuitAuthorizationsClient) CreateOrUpdate(resourceGroupName string, circuitName string, authorizationName string, authorizationParameters ExpressRouteCircuitAuthorization, cancel <-chan struct{}) (<-chan ExpressRouteCircuitAuthorization, <-chan error) {
 	resultChan := make(chan ExpressRouteCircuitAuthorization, 1)
 	errChan := make(chan error, 1)
@@ -58,8 +62,10 @@ func (client ExpressRouteCircuitAuthorizationsClient) CreateOrUpdate(resourceGro
 		var err error
 		var result ExpressRouteCircuitAuthorization
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -93,7 +99,7 @@ func (client ExpressRouteCircuitAuthorizationsClient) CreateOrUpdatePreparer(res
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -129,10 +135,11 @@ func (client ExpressRouteCircuitAuthorizationsClient) CreateOrUpdateResponder(re
 	return
 }
 
-// Delete deletes the specified authorization from the specified express route
-// circuit. This method may poll for completion. Polling can be canceled by
-// passing the cancel channel argument. The channel will be used to cancel
-// polling and any outstanding HTTP requests.
+// Delete the delete authorization operation deletes the specified
+// authorization from the specified ExpressRouteCircuit. This method may poll
+// for completion. Polling can be canceled by passing the cancel channel
+// argument. The channel will be used to cancel polling and any outstanding
+// HTTP requests.
 //
 // resourceGroupName is the name of the resource group. circuitName is the name
 // of the express route circuit. authorizationName is the name of the
@@ -144,8 +151,10 @@ func (client ExpressRouteCircuitAuthorizationsClient) Delete(resourceGroupName s
 		var err error
 		var result autorest.Response
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -179,7 +188,7 @@ func (client ExpressRouteCircuitAuthorizationsClient) DeletePreparer(resourceGro
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -206,14 +215,14 @@ func (client ExpressRouteCircuitAuthorizationsClient) DeleteResponder(resp *http
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusAccepted, http.StatusOK, http.StatusNoContent),
+		azure.WithErrorUnlessStatusCode(http.StatusNoContent, http.StatusAccepted, http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
 	return
 }
 
-// Get gets the specified authorization from the specified express route
-// circuit.
+// Get the GET authorization operation retrieves the specified authorization
+// from the specified ExpressRouteCircuit.
 //
 // resourceGroupName is the name of the resource group. circuitName is the name
 // of the express route circuit. authorizationName is the name of the
@@ -249,7 +258,7 @@ func (client ExpressRouteCircuitAuthorizationsClient) GetPreparer(resourceGroupN
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -281,10 +290,11 @@ func (client ExpressRouteCircuitAuthorizationsClient) GetResponder(resp *http.Re
 	return
 }
 
-// List gets all authorizations in an express route circuit.
+// List the List authorization operation retrieves all the authorizations in an
+// ExpressRouteCircuit.
 //
 // resourceGroupName is the name of the resource group. circuitName is the name
-// of the circuit.
+// of the curcuit.
 func (client ExpressRouteCircuitAuthorizationsClient) List(resourceGroupName string, circuitName string) (result AuthorizationListResult, err error) {
 	req, err := client.ListPreparer(resourceGroupName, circuitName)
 	if err != nil {
@@ -315,7 +325,7 @@ func (client ExpressRouteCircuitAuthorizationsClient) ListPreparer(resourceGroup
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -369,4 +379,49 @@ func (client ExpressRouteCircuitAuthorizationsClient) ListNextResults(lastResult
 	}
 
 	return
+}
+
+// ListComplete gets all elements from the list without paging.
+func (client ExpressRouteCircuitAuthorizationsClient) ListComplete(resourceGroupName string, circuitName string, cancel <-chan struct{}) (<-chan ExpressRouteCircuitAuthorization, <-chan error) {
+	resultChan := make(chan ExpressRouteCircuitAuthorization)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.List(resourceGroupName, circuitName)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
 }

@@ -268,11 +268,11 @@ func NewCloud(configReader io.Reader) (cloudprovider.Interface, error) {
 	az.StorageAccountClient = storage.NewAccountsClientWithBaseURI(az.Environment.ResourceManagerEndpoint, az.SubscriptionID)
 	az.StorageAccountClient.Authorizer = autorest.NewBearerAuthorizer(servicePrincipalToken)
 	configureUserAgent(&az.StorageAccountClient.Client)
-
-	az.DisksClient = disk.NewDisksClientWithBaseURI(az.Environment.ResourceManagerEndpoint, az.SubscriptionID)
-	az.DisksClient.Authorizer = autorest.NewBearerAuthorizer(servicePrincipalToken)
-	configureUserAgent(&az.DisksClient.Client)
-
+	/*
+		az.DisksClient = disk.NewDisksClientWithBaseURI(az.Environment.ResourceManagerEndpoint, az.SubscriptionID)
+		az.DisksClient.Authorizer = autorest.NewBearerAuthorizer(servicePrincipalToken)
+		configureUserAgent(&az.DisksClient.Client)
+	*/
 	// Conditionally configure rate limits
 	if az.CloudProviderRateLimit {
 		// Assign rate limit defaults if no configuration was passed in
@@ -323,9 +323,12 @@ func NewCloud(configReader io.Reader) (cloudprovider.Interface, error) {
 
 	az.metadata = NewInstanceMetadata()
 
+	glog.V(4).Infof("Before initDiskControllers")
 	if err := initDiskControllers(&az); err != nil {
 		return nil, err
 	}
+	glog.V(4).Infof("After initDiskControllers")
+
 	return &az, nil
 }
 
@@ -414,6 +417,8 @@ func initDiskControllers(az *Cloud) error {
 	// Common controller contains the function
 	// needed by both blob disk and managed disk controllers
 
+	glog.V(4).Infof("Inside initDiskControllers")
+
 	common := &controllerCommon{
 		aadResourceEndPoint:   az.Environment.ServiceManagementEndpoint,
 		clientID:              az.AADClientID,
@@ -430,20 +435,24 @@ func initDiskControllers(az *Cloud) error {
 
 	// BlobDiskController: contains the function needed to
 	// create/attach/detach/delete blob based (unmanaged disks)
+
+	glog.V(4).Infof("Before newBlobDiskController")
 	blobController, err := newBlobDiskController(common)
+	glog.V(4).Infof("After newBlobDiskController")
 	if err != nil {
 		return fmt.Errorf("AzureDisk -  failed to init Blob Disk Controller with error (%s)", err.Error())
 	}
 
 	// ManagedDiskController: contains the functions needed to
 	// create/attach/detach/delete managed disks
-	managedController, err := newManagedDiskController(common)
-	if err != nil {
-		return fmt.Errorf("AzureDisk -  failed to init Managed  Disk Controller with error (%s)", err.Error())
-	}
-
+	/*
+		managedController, err := newManagedDiskController(common)
+		if err != nil {
+			return fmt.Errorf("AzureDisk -  failed to init Managed  Disk Controller with error (%s)", err.Error())
+		}
+	*/
 	az.BlobDiskController = blobController
-	az.ManagedDiskController = managedController
+	//az.ManagedDiskController = managedController
 	az.controllerCommon = common
 
 	return nil

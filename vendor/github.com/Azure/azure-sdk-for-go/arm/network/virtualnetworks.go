@@ -24,7 +24,11 @@ import (
 	"net/http"
 )
 
-// VirtualNetworksClient is the composite Swagger for Network Client
+// VirtualNetworksClient is the the Windows Azure Network management API
+// provides a RESTful set of web services that interact with Windows Azure
+// Networks service to manage your network resrources. The API has entities
+// that capture the relationship between an end user and the Windows Azure
+// Networks service.
 type VirtualNetworksClient struct {
 	ManagementClient
 }
@@ -41,85 +45,15 @@ func NewVirtualNetworksClientWithBaseURI(baseURI string, subscriptionID string) 
 	return VirtualNetworksClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
 
-// CheckIPAddressAvailability checks whether a private IP address is available
-// for use.
-//
-// resourceGroupName is the name of the resource group. virtualNetworkName is
-// the name of the virtual network. IPAddress is the private IP address to be
-// verified.
-func (client VirtualNetworksClient) CheckIPAddressAvailability(resourceGroupName string, virtualNetworkName string, IPAddress string) (result IPAddressAvailabilityResult, err error) {
-	req, err := client.CheckIPAddressAvailabilityPreparer(resourceGroupName, virtualNetworkName, IPAddress)
-	if err != nil {
-		err = autorest.NewErrorWithError(err, "network.VirtualNetworksClient", "CheckIPAddressAvailability", nil, "Failure preparing request")
-		return
-	}
-
-	resp, err := client.CheckIPAddressAvailabilitySender(req)
-	if err != nil {
-		result.Response = autorest.Response{Response: resp}
-		err = autorest.NewErrorWithError(err, "network.VirtualNetworksClient", "CheckIPAddressAvailability", resp, "Failure sending request")
-		return
-	}
-
-	result, err = client.CheckIPAddressAvailabilityResponder(resp)
-	if err != nil {
-		err = autorest.NewErrorWithError(err, "network.VirtualNetworksClient", "CheckIPAddressAvailability", resp, "Failure responding to request")
-	}
-
-	return
-}
-
-// CheckIPAddressAvailabilityPreparer prepares the CheckIPAddressAvailability request.
-func (client VirtualNetworksClient) CheckIPAddressAvailabilityPreparer(resourceGroupName string, virtualNetworkName string, IPAddress string) (*http.Request, error) {
-	pathParameters := map[string]interface{}{
-		"resourceGroupName":  autorest.Encode("path", resourceGroupName),
-		"subscriptionId":     autorest.Encode("path", client.SubscriptionID),
-		"virtualNetworkName": autorest.Encode("path", virtualNetworkName),
-	}
-
-	const APIVersion = "2017-03-01"
-	queryParameters := map[string]interface{}{
-		"api-version": APIVersion,
-	}
-	if len(IPAddress) > 0 {
-		queryParameters["ipAddress"] = autorest.Encode("query", IPAddress)
-	}
-
-	preparer := autorest.CreatePreparer(
-		autorest.AsGet(),
-		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}/CheckIPAddressAvailability", pathParameters),
-		autorest.WithQueryParameters(queryParameters))
-	return preparer.Prepare(&http.Request{})
-}
-
-// CheckIPAddressAvailabilitySender sends the CheckIPAddressAvailability request. The method will close the
-// http.Response Body if it receives an error.
-func (client VirtualNetworksClient) CheckIPAddressAvailabilitySender(req *http.Request) (*http.Response, error) {
-	return autorest.SendWithSender(client, req)
-}
-
-// CheckIPAddressAvailabilityResponder handles the response to the CheckIPAddressAvailability request. The method always
-// closes the http.Response Body.
-func (client VirtualNetworksClient) CheckIPAddressAvailabilityResponder(resp *http.Response) (result IPAddressAvailabilityResult, err error) {
-	err = autorest.Respond(
-		resp,
-		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusOK),
-		autorest.ByUnmarshallingJSON(&result),
-		autorest.ByClosing())
-	result.Response = autorest.Response{Response: resp}
-	return
-}
-
-// CreateOrUpdate creates or updates a virtual network in the specified
-// resource group. This method may poll for completion. Polling can be canceled
-// by passing the cancel channel argument. The channel will be used to cancel
-// polling and any outstanding HTTP requests.
+// CreateOrUpdate the Put VirtualNetwork operation creates/updates a virtual
+// network in the specified resource group. This method may poll for
+// completion. Polling can be canceled by passing the cancel channel argument.
+// The channel will be used to cancel polling and any outstanding HTTP
+// requests.
 //
 // resourceGroupName is the name of the resource group. virtualNetworkName is
 // the name of the virtual network. parameters is parameters supplied to the
-// create or update virtual network operation
+// create/update Virtual Network operation
 func (client VirtualNetworksClient) CreateOrUpdate(resourceGroupName string, virtualNetworkName string, parameters VirtualNetwork, cancel <-chan struct{}) (<-chan VirtualNetwork, <-chan error) {
 	resultChan := make(chan VirtualNetwork, 1)
 	errChan := make(chan error, 1)
@@ -127,8 +61,10 @@ func (client VirtualNetworksClient) CreateOrUpdate(resourceGroupName string, vir
 		var err error
 		var result VirtualNetwork
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -161,7 +97,7 @@ func (client VirtualNetworksClient) CreateOrUpdatePreparer(resourceGroupName str
 		"virtualNetworkName": autorest.Encode("path", virtualNetworkName),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -170,7 +106,7 @@ func (client VirtualNetworksClient) CreateOrUpdatePreparer(resourceGroupName str
 		autorest.AsJSON(),
 		autorest.AsPut(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}", pathParameters),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualnetworks/{virtualNetworkName}", pathParameters),
 		autorest.WithJSON(parameters),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare(&http.Request{Cancel: cancel})
@@ -190,17 +126,17 @@ func (client VirtualNetworksClient) CreateOrUpdateResponder(resp *http.Response)
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
+		azure.WithErrorUnlessStatusCode(http.StatusCreated, http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
 	result.Response = autorest.Response{Response: resp}
 	return
 }
 
-// Delete deletes the specified virtual network. This method may poll for
-// completion. Polling can be canceled by passing the cancel channel argument.
-// The channel will be used to cancel polling and any outstanding HTTP
-// requests.
+// Delete the Delete VirtualNetwork operation deletes the specifed virtual
+// network This method may poll for completion. Polling can be canceled by
+// passing the cancel channel argument. The channel will be used to cancel
+// polling and any outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. virtualNetworkName is
 // the name of the virtual network.
@@ -211,8 +147,10 @@ func (client VirtualNetworksClient) Delete(resourceGroupName string, virtualNetw
 		var err error
 		var result autorest.Response
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -245,7 +183,7 @@ func (client VirtualNetworksClient) DeletePreparer(resourceGroupName string, vir
 		"virtualNetworkName": autorest.Encode("path", virtualNetworkName),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -253,7 +191,7 @@ func (client VirtualNetworksClient) DeletePreparer(resourceGroupName string, vir
 	preparer := autorest.CreatePreparer(
 		autorest.AsDelete(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}", pathParameters),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualnetworks/{virtualNetworkName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare(&http.Request{Cancel: cancel})
 }
@@ -272,18 +210,19 @@ func (client VirtualNetworksClient) DeleteResponder(resp *http.Response) (result
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusAccepted, http.StatusNoContent, http.StatusOK),
+		azure.WithErrorUnlessStatusCode(http.StatusNoContent, http.StatusAccepted, http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
 	return
 }
 
-// Get gets the specified virtual network by resource group.
+// Get the Get VirtualNetwork operation retrieves information about the
+// specified virtual network.
 //
 // resourceGroupName is the name of the resource group. virtualNetworkName is
-// the name of the virtual network. expand is expands referenced resources.
-func (client VirtualNetworksClient) Get(resourceGroupName string, virtualNetworkName string, expand string) (result VirtualNetwork, err error) {
-	req, err := client.GetPreparer(resourceGroupName, virtualNetworkName, expand)
+// the name of the virtual network.
+func (client VirtualNetworksClient) Get(resourceGroupName string, virtualNetworkName string) (result VirtualNetwork, err error) {
+	req, err := client.GetPreparer(resourceGroupName, virtualNetworkName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "network.VirtualNetworksClient", "Get", nil, "Failure preparing request")
 		return
@@ -305,25 +244,22 @@ func (client VirtualNetworksClient) Get(resourceGroupName string, virtualNetwork
 }
 
 // GetPreparer prepares the Get request.
-func (client VirtualNetworksClient) GetPreparer(resourceGroupName string, virtualNetworkName string, expand string) (*http.Request, error) {
+func (client VirtualNetworksClient) GetPreparer(resourceGroupName string, virtualNetworkName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"resourceGroupName":  autorest.Encode("path", resourceGroupName),
 		"subscriptionId":     autorest.Encode("path", client.SubscriptionID),
 		"virtualNetworkName": autorest.Encode("path", virtualNetworkName),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
-	}
-	if len(expand) > 0 {
-		queryParameters["$expand"] = autorest.Encode("query", expand)
 	}
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}", pathParameters),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualnetworks/{virtualNetworkName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare(&http.Request{})
 }
@@ -347,7 +283,8 @@ func (client VirtualNetworksClient) GetResponder(resp *http.Response) (result Vi
 	return
 }
 
-// List gets all virtual networks in a resource group.
+// List the list VirtualNetwork returns all Virtual Networks in a resource
+// group
 //
 // resourceGroupName is the name of the resource group.
 func (client VirtualNetworksClient) List(resourceGroupName string) (result VirtualNetworkListResult, err error) {
@@ -379,7 +316,7 @@ func (client VirtualNetworksClient) ListPreparer(resourceGroupName string) (*htt
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -387,7 +324,7 @@ func (client VirtualNetworksClient) ListPreparer(resourceGroupName string) (*htt
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks", pathParameters),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualnetworks", pathParameters),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare(&http.Request{})
 }
@@ -435,7 +372,53 @@ func (client VirtualNetworksClient) ListNextResults(lastResults VirtualNetworkLi
 	return
 }
 
-// ListAll gets all virtual networks in a subscription.
+// ListComplete gets all elements from the list without paging.
+func (client VirtualNetworksClient) ListComplete(resourceGroupName string, cancel <-chan struct{}) (<-chan VirtualNetwork, <-chan error) {
+	resultChan := make(chan VirtualNetwork)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.List(resourceGroupName)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
+}
+
+// ListAll the list VirtualNetwork returns all Virtual Networks in a
+// subscription
 func (client VirtualNetworksClient) ListAll() (result VirtualNetworkListResult, err error) {
 	req, err := client.ListAllPreparer()
 	if err != nil {
@@ -464,7 +447,7 @@ func (client VirtualNetworksClient) ListAllPreparer() (*http.Request, error) {
 		"subscriptionId": autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -472,7 +455,7 @@ func (client VirtualNetworksClient) ListAllPreparer() (*http.Request, error) {
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/providers/Microsoft.Network/virtualNetworks", pathParameters),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/providers/Microsoft.Network/virtualnetworks", pathParameters),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare(&http.Request{})
 }
@@ -518,4 +501,49 @@ func (client VirtualNetworksClient) ListAllNextResults(lastResults VirtualNetwor
 	}
 
 	return
+}
+
+// ListAllComplete gets all elements from the list without paging.
+func (client VirtualNetworksClient) ListAllComplete(cancel <-chan struct{}) (<-chan VirtualNetwork, <-chan error) {
+	resultChan := make(chan VirtualNetwork)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.ListAll()
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListAllNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
 }

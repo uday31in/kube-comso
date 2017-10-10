@@ -20,7 +20,7 @@ package storage
 
 // UserAgent returns the UserAgent string to use when sending http.Requests.
 func UserAgent() string {
-	return "Azure-SDK-For-Go/v10.0.2-beta arm-storage/2016-12-01"
+	return "Azure-SDK-For-Go/0.0.0 arm-storage/2016-01-01"
 }
 
 // Version returns the semantic version (see http://semver.org) of the client.

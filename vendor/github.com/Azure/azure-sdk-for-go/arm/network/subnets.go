@@ -19,12 +19,17 @@ package network
 // regenerated.
 
 import (
+	"net/http"
+
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"net/http"
+	"github.com/Azure/go-autorest/autorest/validation"
 )
 
-// SubnetsClient is the composite Swagger for Network Client
+// SubnetsClient is the the Windows Azure Network management API provides a
+// RESTful set of web services that interact with Windows Azure Networks
+// service to manage your network resrources. The API has entities that capture
+// the relationship between an end user and the Windows Azure Networks service.
 type SubnetsClient struct {
 	ManagementClient
 }
@@ -39,24 +44,36 @@ func NewSubnetsClientWithBaseURI(baseURI string, subscriptionID string) SubnetsC
 	return SubnetsClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
 
-// CreateOrUpdate creates or updates a subnet in the specified virtual network.
-// This method may poll for completion. Polling can be canceled by passing the
-// cancel channel argument. The channel will be used to cancel polling and any
-// outstanding HTTP requests.
+// CreateOrUpdate the Put Subnet operation creates/updates a subnet in
+// thespecified virtual network This method may poll for completion. Polling
+// can be canceled by passing the cancel channel argument. The channel will be
+// used to cancel polling and any outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. virtualNetworkName is
 // the name of the virtual network. subnetName is the name of the subnet.
-// subnetParameters is parameters supplied to the create or update subnet
-// operation.
+// subnetParameters is parameters supplied to the create/update Subnet
+// operation
 func (client SubnetsClient) CreateOrUpdate(resourceGroupName string, virtualNetworkName string, subnetName string, subnetParameters Subnet, cancel <-chan struct{}) (<-chan Subnet, <-chan error) {
 	resultChan := make(chan Subnet, 1)
 	errChan := make(chan error, 1)
+	if err := validation.Validate([]validation.Validation{
+		{TargetValue: subnetParameters,
+			Constraints: []validation.Constraint{{Target: "subnetParameters.SubnetPropertiesFormat", Name: validation.Null, Rule: false,
+				Chain: []validation.Constraint{{Target: "subnetParameters.SubnetPropertiesFormat.AddressPrefix", Name: validation.Null, Rule: true, Chain: nil}}}}}}); err != nil {
+		errChan <- validation.NewErrorWithValidationError(err, "network.SubnetsClient", "CreateOrUpdate")
+		close(errChan)
+		close(resultChan)
+		return resultChan, errChan
+	}
+
 	go func() {
 		var err error
 		var result Subnet
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -90,7 +107,7 @@ func (client SubnetsClient) CreateOrUpdatePreparer(resourceGroupName string, vir
 		"virtualNetworkName": autorest.Encode("path", virtualNetworkName),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -99,7 +116,7 @@ func (client SubnetsClient) CreateOrUpdatePreparer(resourceGroupName string, vir
 		autorest.AsJSON(),
 		autorest.AsPut(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}/subnets/{subnetName}", pathParameters),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualnetworks/{virtualNetworkName}/subnets/{subnetName}", pathParameters),
 		autorest.WithJSON(subnetParameters),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare(&http.Request{Cancel: cancel})
@@ -119,16 +136,17 @@ func (client SubnetsClient) CreateOrUpdateResponder(resp *http.Response) (result
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
+		azure.WithErrorUnlessStatusCode(http.StatusCreated, http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
 	result.Response = autorest.Response{Response: resp}
 	return
 }
 
-// Delete deletes the specified subnet. This method may poll for completion.
-// Polling can be canceled by passing the cancel channel argument. The channel
-// will be used to cancel polling and any outstanding HTTP requests.
+// Delete the delete subnet operation deletes the specified subnet. This method
+// may poll for completion. Polling can be canceled by passing the cancel
+// channel argument. The channel will be used to cancel polling and any
+// outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. virtualNetworkName is
 // the name of the virtual network. subnetName is the name of the subnet.
@@ -139,8 +157,10 @@ func (client SubnetsClient) Delete(resourceGroupName string, virtualNetworkName 
 		var err error
 		var result autorest.Response
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -174,7 +194,7 @@ func (client SubnetsClient) DeletePreparer(resourceGroupName string, virtualNetw
 		"virtualNetworkName": autorest.Encode("path", virtualNetworkName),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -182,7 +202,7 @@ func (client SubnetsClient) DeletePreparer(resourceGroupName string, virtualNetw
 	preparer := autorest.CreatePreparer(
 		autorest.AsDelete(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}/subnets/{subnetName}", pathParameters),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualnetworks/{virtualNetworkName}/subnets/{subnetName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare(&http.Request{Cancel: cancel})
 }
@@ -201,19 +221,19 @@ func (client SubnetsClient) DeleteResponder(resp *http.Response) (result autores
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent, http.StatusAccepted),
+		azure.WithErrorUnlessStatusCode(http.StatusNoContent, http.StatusAccepted, http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
 	return
 }
 
-// Get gets the specified subnet by virtual network and resource group.
+// Get the Get subnet operation retreives information about the specified
+// subnet.
 //
 // resourceGroupName is the name of the resource group. virtualNetworkName is
 // the name of the virtual network. subnetName is the name of the subnet.
-// expand is expands referenced resources.
-func (client SubnetsClient) Get(resourceGroupName string, virtualNetworkName string, subnetName string, expand string) (result Subnet, err error) {
-	req, err := client.GetPreparer(resourceGroupName, virtualNetworkName, subnetName, expand)
+func (client SubnetsClient) Get(resourceGroupName string, virtualNetworkName string, subnetName string, nope string) (result Subnet, err error) {
+	req, err := client.GetPreparer(resourceGroupName, virtualNetworkName, subnetName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "network.SubnetsClient", "Get", nil, "Failure preparing request")
 		return
@@ -235,7 +255,7 @@ func (client SubnetsClient) Get(resourceGroupName string, virtualNetworkName str
 }
 
 // GetPreparer prepares the Get request.
-func (client SubnetsClient) GetPreparer(resourceGroupName string, virtualNetworkName string, subnetName string, expand string) (*http.Request, error) {
+func (client SubnetsClient) GetPreparer(resourceGroupName string, virtualNetworkName string, subnetName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"resourceGroupName":  autorest.Encode("path", resourceGroupName),
 		"subnetName":         autorest.Encode("path", subnetName),
@@ -243,18 +263,15 @@ func (client SubnetsClient) GetPreparer(resourceGroupName string, virtualNetwork
 		"virtualNetworkName": autorest.Encode("path", virtualNetworkName),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
-	}
-	if len(expand) > 0 {
-		queryParameters["$expand"] = autorest.Encode("query", expand)
 	}
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}/subnets/{subnetName}", pathParameters),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualnetworks/{virtualNetworkName}/subnets/{subnetName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare(&http.Request{})
 }
@@ -278,7 +295,8 @@ func (client SubnetsClient) GetResponder(resp *http.Response) (result Subnet, er
 	return
 }
 
-// List gets all subnets in a virtual network.
+// List the List subnets opertion retrieves all the subnets in a virtual
+// network.
 //
 // resourceGroupName is the name of the resource group. virtualNetworkName is
 // the name of the virtual network.
@@ -312,7 +330,7 @@ func (client SubnetsClient) ListPreparer(resourceGroupName string, virtualNetwor
 		"virtualNetworkName": autorest.Encode("path", virtualNetworkName),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -320,7 +338,7 @@ func (client SubnetsClient) ListPreparer(resourceGroupName string, virtualNetwor
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}/subnets", pathParameters),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualnetworks/{virtualNetworkName}/subnets", pathParameters),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare(&http.Request{})
 }
@@ -366,4 +384,49 @@ func (client SubnetsClient) ListNextResults(lastResults SubnetListResult) (resul
 	}
 
 	return
+}
+
+// ListComplete gets all elements from the list without paging.
+func (client SubnetsClient) ListComplete(resourceGroupName string, virtualNetworkName string, cancel <-chan struct{}) (<-chan Subnet, <-chan error) {
+	resultChan := make(chan Subnet)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.List(resourceGroupName, virtualNetworkName)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
 }

@@ -24,8 +24,11 @@ import (
 	"net/http"
 )
 
-// ExpressRouteServiceProvidersClient is the composite Swagger for Network
-// Client
+// ExpressRouteServiceProvidersClient is the the Windows Azure Network
+// management API provides a RESTful set of web services that interact with
+// Windows Azure Networks service to manage your network resrources. The API
+// has entities that capture the relationship between an end user and the
+// Windows Azure Networks service.
 type ExpressRouteServiceProvidersClient struct {
 	ManagementClient
 }
@@ -42,7 +45,8 @@ func NewExpressRouteServiceProvidersClientWithBaseURI(baseURI string, subscripti
 	return ExpressRouteServiceProvidersClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
 
-// List gets all the available express route service providers.
+// List the List ExpressRouteServiceProvider opertion retrieves all the
+// available ExpressRouteServiceProviders.
 func (client ExpressRouteServiceProvidersClient) List() (result ExpressRouteServiceProviderListResult, err error) {
 	req, err := client.ListPreparer()
 	if err != nil {
@@ -71,7 +75,7 @@ func (client ExpressRouteServiceProvidersClient) ListPreparer() (*http.Request, 
 		"subscriptionId": autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -125,4 +129,49 @@ func (client ExpressRouteServiceProvidersClient) ListNextResults(lastResults Exp
 	}
 
 	return
+}
+
+// ListComplete gets all elements from the list without paging.
+func (client ExpressRouteServiceProvidersClient) ListComplete(cancel <-chan struct{}) (<-chan ExpressRouteServiceProvider, <-chan error) {
+	resultChan := make(chan ExpressRouteServiceProvider)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.List()
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
 }

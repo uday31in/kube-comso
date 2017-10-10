@@ -78,29 +78,32 @@ func (c *controllerCommon) AttachDisk(isManagedDisk bool, diskName, diskURI stri
 		return cloudprovider.InstanceNotFound
 	}
 	disks := *vm.StorageProfile.DataDisks
-	if isManagedDisk {
-		disks = append(disks,
-			compute.DataDisk{
-				Name:         &diskName,
-				Lun:          &lun,
-				Caching:      cachingMode,
-				CreateOption: "attach",
-				ManagedDisk: &compute.ManagedDiskParameters{
-					ID: &diskURI,
-				},
-			})
-	} else {
-		disks = append(disks,
-			compute.DataDisk{
-				Name: &diskName,
-				Vhd: &compute.VirtualHardDisk{
-					URI: &diskURI,
-				},
-				Lun:          &lun,
-				Caching:      cachingMode,
-				CreateOption: "attach",
-			})
-	}
+
+	/*
+		if isManagedDisk {
+			disks = append(disks,
+				compute.DataDisk{
+					Name:         &diskName,
+					Lun:          &lun,
+					Caching:      cachingMode,
+					CreateOption: "attach",
+					ManagedDisk: &compute.ManagedDiskParameters{
+						ID: &diskURI,
+					},
+				})
+		} else {
+	*/
+	disks = append(disks,
+		compute.DataDisk{
+			Name: &diskName,
+			Vhd: &compute.VirtualHardDisk{
+				URI: &diskURI,
+			},
+			Lun:          &lun,
+			Caching:      cachingMode,
+			CreateOption: "attach",
+		})
+	//}
 
 	newVM := compute.VirtualMachine{
 		Location: vm.Location,
@@ -152,8 +155,9 @@ func (c *controllerCommon) DetachDiskByName(diskName, diskURI string, nodeName t
 	bFoundDisk := false
 	for i, disk := range disks {
 		if disk.Lun != nil && (disk.Name != nil && diskName != "" && *disk.Name == diskName) ||
-			(disk.Vhd != nil && disk.Vhd.URI != nil && diskURI != "" && *disk.Vhd.URI == diskURI) ||
-			(disk.ManagedDisk != nil && diskURI != "" && *disk.ManagedDisk.ID == diskURI) {
+			(disk.Vhd != nil && disk.Vhd.URI != nil && diskURI != "" && *disk.Vhd.URI == diskURI) {
+			//||
+			//(disk.ManagedDisk != nil && diskURI != "" && *disk.ManagedDisk.ID == diskURI) {
 			// found the disk
 			glog.V(4).Infof("azureDisk - detach disk: name %q uri %q", diskName, diskURI)
 			disks = append(disks[:i], disks[i+1:]...)
@@ -207,8 +211,9 @@ func (c *controllerCommon) GetDiskLun(diskName, diskURI string, nodeName types.N
 	disks := *vm.StorageProfile.DataDisks
 	for _, disk := range disks {
 		if disk.Lun != nil && (disk.Name != nil && diskName != "" && *disk.Name == diskName) ||
-			(disk.Vhd != nil && disk.Vhd.URI != nil && diskURI != "" && *disk.Vhd.URI == diskURI) ||
-			(disk.ManagedDisk != nil && *disk.ManagedDisk.ID == diskURI) {
+			(disk.Vhd != nil && disk.Vhd.URI != nil && diskURI != "" && *disk.Vhd.URI == diskURI) {
+			//||
+			//(disk.ManagedDisk != nil && *disk.ManagedDisk.ID == diskURI) {
 			// found the disk
 			glog.V(4).Infof("azureDisk - find disk: lun %d name %q uri %q", *disk.Lun, diskName, diskURI)
 			return *disk.Lun, nil

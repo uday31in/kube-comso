@@ -1,6 +1,10 @@
-// Package network implements the Azure ARM Network service API version .
+// Package network implements the Azure ARM Network service API version
+// 2015-05-01-preview.
 //
-// Composite Swagger for Network Client
+// The Windows Azure Network management API provides a RESTful set of web
+// services that interact with Windows Azure Networks service to manage your
+// network resrources. The API has entities that capture the relationship
+// between an end user and the Windows Azure Networks service.
 package network
 
 // Copyright (c) Microsoft and contributors.  All rights reserved.
@@ -56,7 +60,7 @@ func NewWithBaseURI(baseURI string, subscriptionID string) ManagementClient {
 // CheckDNSNameAvailability checks whether a domain name in the cloudapp.net
 // zone is available for use.
 //
-// location is the location of the domain name. domainNameLabel is the domain
+// location is the location of the domain name domainNameLabel is the domain
 // name to be verified. It must conform to the following regular expression:
 // ^[a-z][a-z0-9-]{1,61}[a-z0-9]$.
 func (client ManagementClient) CheckDNSNameAvailability(location string, domainNameLabel string) (result DNSNameAvailabilityResult, err error) {
@@ -88,7 +92,7 @@ func (client ManagementClient) CheckDNSNameAvailabilityPreparer(location string,
 		"subscriptionId": autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}

@@ -25,7 +25,10 @@ import (
 	"net/http"
 )
 
-// SecurityRulesClient is the composite Swagger for Network Client
+// SecurityRulesClient is the the Windows Azure Network management API provides
+// a RESTful set of web services that interact with Windows Azure Networks
+// service to manage your network resrources. The API has entities that capture
+// the relationship between an end user and the Windows Azure Networks service.
 type SecurityRulesClient struct {
 	ManagementClient
 }
@@ -42,15 +45,16 @@ func NewSecurityRulesClientWithBaseURI(baseURI string, subscriptionID string) Se
 	return SecurityRulesClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
 
-// CreateOrUpdate creates or updates a security rule in the specified network
-// security group. This method may poll for completion. Polling can be canceled
-// by passing the cancel channel argument. The channel will be used to cancel
-// polling and any outstanding HTTP requests.
+// CreateOrUpdate the Put network security rule operation creates/updates a
+// security rule in the specified network security group This method may poll
+// for completion. Polling can be canceled by passing the cancel channel
+// argument. The channel will be used to cancel polling and any outstanding
+// HTTP requests.
 //
 // resourceGroupName is the name of the resource group.
 // networkSecurityGroupName is the name of the network security group.
 // securityRuleName is the name of the security rule. securityRuleParameters is
-// parameters supplied to the create or update network security rule operation.
+// parameters supplied to the create/update network security rule operation
 func (client SecurityRulesClient) CreateOrUpdate(resourceGroupName string, networkSecurityGroupName string, securityRuleName string, securityRuleParameters SecurityRule, cancel <-chan struct{}) (<-chan SecurityRule, <-chan error) {
 	resultChan := make(chan SecurityRule, 1)
 	errChan := make(chan error, 1)
@@ -70,8 +74,10 @@ func (client SecurityRulesClient) CreateOrUpdate(resourceGroupName string, netwo
 		var err error
 		var result SecurityRule
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -105,7 +111,7 @@ func (client SecurityRulesClient) CreateOrUpdatePreparer(resourceGroupName strin
 		"subscriptionId":           autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -134,17 +140,17 @@ func (client SecurityRulesClient) CreateOrUpdateResponder(resp *http.Response) (
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
+		azure.WithErrorUnlessStatusCode(http.StatusCreated, http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
 	result.Response = autorest.Response{Response: resp}
 	return
 }
 
-// Delete deletes the specified network security rule. This method may poll for
-// completion. Polling can be canceled by passing the cancel channel argument.
-// The channel will be used to cancel polling and any outstanding HTTP
-// requests.
+// Delete the delete network security rule operation deletes the specified
+// network security rule. This method may poll for completion. Polling can be
+// canceled by passing the cancel channel argument. The channel will be used to
+// cancel polling and any outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group.
 // networkSecurityGroupName is the name of the network security group.
@@ -156,8 +162,10 @@ func (client SecurityRulesClient) Delete(resourceGroupName string, networkSecuri
 		var err error
 		var result autorest.Response
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -191,7 +199,7 @@ func (client SecurityRulesClient) DeletePreparer(resourceGroupName string, netwo
 		"subscriptionId":           autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -224,7 +232,8 @@ func (client SecurityRulesClient) DeleteResponder(resp *http.Response) (result a
 	return
 }
 
-// Get get the specified network security rule.
+// Get the Get NetworkSecurityRule operation retreives information about the
+// specified network security rule.
 //
 // resourceGroupName is the name of the resource group.
 // networkSecurityGroupName is the name of the network security group.
@@ -260,7 +269,7 @@ func (client SecurityRulesClient) GetPreparer(resourceGroupName string, networkS
 		"subscriptionId":           autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -292,7 +301,8 @@ func (client SecurityRulesClient) GetResponder(resp *http.Response) (result Secu
 	return
 }
 
-// List gets all security rules in a network security group.
+// List the List network security rule opertion retrieves all the security
+// rules in a network security group.
 //
 // resourceGroupName is the name of the resource group.
 // networkSecurityGroupName is the name of the network security group.
@@ -326,7 +336,7 @@ func (client SecurityRulesClient) ListPreparer(resourceGroupName string, network
 		"subscriptionId":           autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -380,4 +390,49 @@ func (client SecurityRulesClient) ListNextResults(lastResults SecurityRuleListRe
 	}
 
 	return
+}
+
+// ListComplete gets all elements from the list without paging.
+func (client SecurityRulesClient) ListComplete(resourceGroupName string, networkSecurityGroupName string, cancel <-chan struct{}) (<-chan SecurityRule, <-chan error) {
+	resultChan := make(chan SecurityRule)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.List(resourceGroupName, networkSecurityGroupName)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
 }

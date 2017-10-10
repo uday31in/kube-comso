@@ -25,7 +25,10 @@ import (
 	"net/http"
 )
 
-// UsagesClient is the composite Swagger for Network Client
+// UsagesClient is the the Windows Azure Network management API provides a
+// RESTful set of web services that interact with Windows Azure Networks
+// service to manage your network resrources. The API has entities that capture
+// the relationship between an end user and the Windows Azure Networks service.
 type UsagesClient struct {
 	ManagementClient
 }
@@ -42,7 +45,7 @@ func NewUsagesClientWithBaseURI(baseURI string, subscriptionID string) UsagesCli
 
 // List lists compute usages for a subscription.
 //
-// location is the location where resource usage is queried.
+// location is the location upon which resource usage is queried.
 func (client UsagesClient) List(location string) (result UsagesListResult, err error) {
 	if err := validation.Validate([]validation.Validation{
 		{TargetValue: location,
@@ -78,7 +81,7 @@ func (client UsagesClient) ListPreparer(location string) (*http.Request, error) 
 		"subscriptionId": autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -132,4 +135,49 @@ func (client UsagesClient) ListNextResults(lastResults UsagesListResult) (result
 	}
 
 	return
+}
+
+// ListComplete gets all elements from the list without paging.
+func (client UsagesClient) ListComplete(location string, cancel <-chan struct{}) (<-chan Usage, <-chan error) {
+	resultChan := make(chan Usage)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.List(location)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
 }

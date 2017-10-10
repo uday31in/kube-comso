@@ -19,13 +19,17 @@ package network
 // regenerated.
 
 import (
+	"net/http"
+
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/go-autorest/autorest/validation"
-	"net/http"
 )
 
-// PublicIPAddressesClient is the composite Swagger for Network Client
+// PublicIPAddressesClient is the the Windows Azure Network management API
+// provides a RESTful set of web services that interact with Windows Azure
+// Networks service to manage your network resrources. The API has entities
+// that capture the relationship between an end user and the Windows Azure
+// Networks service.
 type PublicIPAddressesClient struct {
 	ManagementClient
 }
@@ -42,37 +46,25 @@ func NewPublicIPAddressesClientWithBaseURI(baseURI string, subscriptionID string
 	return PublicIPAddressesClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
 
-// CreateOrUpdate creates or updates a static or dynamic public IP address.
-// This method may poll for completion. Polling can be canceled by passing the
-// cancel channel argument. The channel will be used to cancel polling and any
-// outstanding HTTP requests.
+// CreateOrUpdate the Put PublicIPAddress operation creates/updates a
+// stable/dynamic PublicIP address This method may poll for completion. Polling
+// can be canceled by passing the cancel channel argument. The channel will be
+// used to cancel polling and any outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. publicIPAddressName is
-// the name of the public IP address. parameters is parameters supplied to the
-// create or update public IP address operation.
+// the name of the publicIpAddress. parameters is parameters supplied to the
+// create/update PublicIPAddress operation
 func (client PublicIPAddressesClient) CreateOrUpdate(resourceGroupName string, publicIPAddressName string, parameters PublicIPAddress, cancel <-chan struct{}) (<-chan PublicIPAddress, <-chan error) {
 	resultChan := make(chan PublicIPAddress, 1)
 	errChan := make(chan error, 1)
-	if err := validation.Validate([]validation.Validation{
-		{TargetValue: parameters,
-			Constraints: []validation.Constraint{{Target: "parameters.PublicIPAddressPropertiesFormat", Name: validation.Null, Rule: false,
-				Chain: []validation.Constraint{{Target: "parameters.PublicIPAddressPropertiesFormat.IPConfiguration", Name: validation.Null, Rule: false,
-					Chain: []validation.Constraint{{Target: "parameters.PublicIPAddressPropertiesFormat.IPConfiguration.IPConfigurationPropertiesFormat", Name: validation.Null, Rule: false,
-						Chain: []validation.Constraint{{Target: "parameters.PublicIPAddressPropertiesFormat.IPConfiguration.IPConfigurationPropertiesFormat.PublicIPAddress", Name: validation.Null, Rule: false, Chain: nil}}},
-					}},
-				}}}}}); err != nil {
-		errChan <- validation.NewErrorWithValidationError(err, "network.PublicIPAddressesClient", "CreateOrUpdate")
-		close(errChan)
-		close(resultChan)
-		return resultChan, errChan
-	}
-
 	go func() {
 		var err error
 		var result PublicIPAddress
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -105,7 +97,7 @@ func (client PublicIPAddressesClient) CreateOrUpdatePreparer(resourceGroupName s
 		"subscriptionId":      autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -114,7 +106,7 @@ func (client PublicIPAddressesClient) CreateOrUpdatePreparer(resourceGroupName s
 		autorest.AsJSON(),
 		autorest.AsPut(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/publicIPAddresses/{publicIpAddressName}", pathParameters),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/publicIPAddresses/{publicIpAddressName}/", pathParameters),
 		autorest.WithJSON(parameters),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare(&http.Request{Cancel: cancel})
@@ -141,10 +133,10 @@ func (client PublicIPAddressesClient) CreateOrUpdateResponder(resp *http.Respons
 	return
 }
 
-// Delete deletes the specified public IP address. This method may poll for
-// completion. Polling can be canceled by passing the cancel channel argument.
-// The channel will be used to cancel polling and any outstanding HTTP
-// requests.
+// Delete the delete publicIpAddress operation deletes the specified
+// publicIpAddress. This method may poll for completion. Polling can be
+// canceled by passing the cancel channel argument. The channel will be used to
+// cancel polling and any outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. publicIPAddressName is
 // the name of the subnet.
@@ -155,8 +147,10 @@ func (client PublicIPAddressesClient) Delete(resourceGroupName string, publicIPA
 		var err error
 		var result autorest.Response
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -189,7 +183,7 @@ func (client PublicIPAddressesClient) DeletePreparer(resourceGroupName string, p
 		"subscriptionId":      autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -197,7 +191,7 @@ func (client PublicIPAddressesClient) DeletePreparer(resourceGroupName string, p
 	preparer := autorest.CreatePreparer(
 		autorest.AsDelete(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/publicIPAddresses/{publicIpAddressName}", pathParameters),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/publicIPAddresses/{publicIpAddressName}/", pathParameters),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare(&http.Request{Cancel: cancel})
 }
@@ -222,12 +216,13 @@ func (client PublicIPAddressesClient) DeleteResponder(resp *http.Response) (resu
 	return
 }
 
-// Get gets the specified public IP address in a specified resource group.
+// Get the Get publicIpAddress operation retreives information about the
+// specified pubicIpAddress
 //
 // resourceGroupName is the name of the resource group. publicIPAddressName is
-// the name of the subnet. expand is expands referenced resources.
-func (client PublicIPAddressesClient) Get(resourceGroupName string, publicIPAddressName string, expand string) (result PublicIPAddress, err error) {
-	req, err := client.GetPreparer(resourceGroupName, publicIPAddressName, expand)
+// the name of the subnet.
+func (client PublicIPAddressesClient) Get(resourceGroupName string, publicIPAddressName string, nope string) (result PublicIPAddress, err error) {
+	req, err := client.GetPreparer(resourceGroupName, publicIPAddressName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "network.PublicIPAddressesClient", "Get", nil, "Failure preparing request")
 		return
@@ -249,25 +244,22 @@ func (client PublicIPAddressesClient) Get(resourceGroupName string, publicIPAddr
 }
 
 // GetPreparer prepares the Get request.
-func (client PublicIPAddressesClient) GetPreparer(resourceGroupName string, publicIPAddressName string, expand string) (*http.Request, error) {
+func (client PublicIPAddressesClient) GetPreparer(resourceGroupName string, publicIPAddressName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"publicIpAddressName": autorest.Encode("path", publicIPAddressName),
 		"resourceGroupName":   autorest.Encode("path", resourceGroupName),
 		"subscriptionId":      autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
-	}
-	if len(expand) > 0 {
-		queryParameters["$expand"] = autorest.Encode("query", expand)
 	}
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/publicIPAddresses/{publicIpAddressName}", pathParameters),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/publicIPAddresses/{publicIpAddressName}/", pathParameters),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare(&http.Request{})
 }
@@ -291,7 +283,8 @@ func (client PublicIPAddressesClient) GetResponder(resp *http.Response) (result 
 	return
 }
 
-// List gets all public IP addresses in a resource group.
+// List the List publicIpAddress opertion retrieves all the publicIpAddresses
+// in a resource group.
 //
 // resourceGroupName is the name of the resource group.
 func (client PublicIPAddressesClient) List(resourceGroupName string) (result PublicIPAddressListResult, err error) {
@@ -323,7 +316,7 @@ func (client PublicIPAddressesClient) ListPreparer(resourceGroupName string) (*h
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -379,7 +372,53 @@ func (client PublicIPAddressesClient) ListNextResults(lastResults PublicIPAddres
 	return
 }
 
-// ListAll gets all the public IP addresses in a subscription.
+// ListComplete gets all elements from the list without paging.
+func (client PublicIPAddressesClient) ListComplete(resourceGroupName string, cancel <-chan struct{}) (<-chan PublicIPAddress, <-chan error) {
+	resultChan := make(chan PublicIPAddress)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.List(resourceGroupName)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
+}
+
+// ListAll the List publicIpAddress opertion retrieves all the
+// publicIpAddresses in a subscription.
 func (client PublicIPAddressesClient) ListAll() (result PublicIPAddressListResult, err error) {
 	req, err := client.ListAllPreparer()
 	if err != nil {
@@ -408,7 +447,7 @@ func (client PublicIPAddressesClient) ListAllPreparer() (*http.Request, error) {
 		"subscriptionId": autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -462,4 +501,49 @@ func (client PublicIPAddressesClient) ListAllNextResults(lastResults PublicIPAdd
 	}
 
 	return
+}
+
+// ListAllComplete gets all elements from the list without paging.
+func (client PublicIPAddressesClient) ListAllComplete(cancel <-chan struct{}) (<-chan PublicIPAddress, <-chan error) {
+	resultChan := make(chan PublicIPAddress)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.ListAll()
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListAllNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
 }

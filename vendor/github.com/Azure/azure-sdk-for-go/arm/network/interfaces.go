@@ -19,12 +19,16 @@ package network
 // regenerated.
 
 import (
+	"net/http"
+
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"net/http"
 )
 
-// InterfacesClient is the composite Swagger for Network Client
+// InterfacesClient is the the Windows Azure Network management API provides a
+// RESTful set of web services that interact with Windows Azure Networks
+// service to manage your network resrources. The API has entities that capture
+// the relationship between an end user and the Windows Azure Networks service.
 type InterfacesClient struct {
 	ManagementClient
 }
@@ -40,14 +44,14 @@ func NewInterfacesClientWithBaseURI(baseURI string, subscriptionID string) Inter
 	return InterfacesClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
 
-// CreateOrUpdate creates or updates a network interface. This method may poll
-// for completion. Polling can be canceled by passing the cancel channel
-// argument. The channel will be used to cancel polling and any outstanding
-// HTTP requests.
+// CreateOrUpdate the Put NetworkInterface operation creates/updates a
+// networkInterface This method may poll for completion. Polling can be
+// canceled by passing the cancel channel argument. The channel will be used to
+// cancel polling and any outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. networkInterfaceName is
 // the name of the network interface. parameters is parameters supplied to the
-// create or update network interface operation.
+// create/update NetworkInterface operation
 func (client InterfacesClient) CreateOrUpdate(resourceGroupName string, networkInterfaceName string, parameters Interface, cancel <-chan struct{}) (<-chan Interface, <-chan error) {
 	resultChan := make(chan Interface, 1)
 	errChan := make(chan error, 1)
@@ -55,8 +59,10 @@ func (client InterfacesClient) CreateOrUpdate(resourceGroupName string, networkI
 		var err error
 		var result Interface
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -89,7 +95,7 @@ func (client InterfacesClient) CreateOrUpdatePreparer(resourceGroupName string, 
 		"subscriptionId":       autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -125,10 +131,10 @@ func (client InterfacesClient) CreateOrUpdateResponder(resp *http.Response) (res
 	return
 }
 
-// Delete deletes the specified network interface. This method may poll for
-// completion. Polling can be canceled by passing the cancel channel argument.
-// The channel will be used to cancel polling and any outstanding HTTP
-// requests.
+// Delete the delete netwokInterface operation deletes the specified
+// netwokInterface. This method may poll for completion. Polling can be
+// canceled by passing the cancel channel argument. The channel will be used to
+// cancel polling and any outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. networkInterfaceName is
 // the name of the network interface.
@@ -139,8 +145,10 @@ func (client InterfacesClient) Delete(resourceGroupName string, networkInterface
 		var err error
 		var result autorest.Response
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -173,7 +181,7 @@ func (client InterfacesClient) DeletePreparer(resourceGroupName string, networkI
 		"subscriptionId":       autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -206,12 +214,13 @@ func (client InterfacesClient) DeleteResponder(resp *http.Response) (result auto
 	return
 }
 
-// Get gets information about the specified network interface.
+// Get the Get ntework interface operation retreives information about the
+// specified network interface.
 //
 // resourceGroupName is the name of the resource group. networkInterfaceName is
-// the name of the network interface. expand is expands referenced resources.
-func (client InterfacesClient) Get(resourceGroupName string, networkInterfaceName string, expand string) (result Interface, err error) {
-	req, err := client.GetPreparer(resourceGroupName, networkInterfaceName, expand)
+// the name of the network interface.
+func (client InterfacesClient) Get(resourceGroupName string, networkInterfaceName string, nope string) (result Interface, err error) {
+	req, err := client.GetPreparer(resourceGroupName, networkInterfaceName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "network.InterfacesClient", "Get", nil, "Failure preparing request")
 		return
@@ -233,19 +242,16 @@ func (client InterfacesClient) Get(resourceGroupName string, networkInterfaceNam
 }
 
 // GetPreparer prepares the Get request.
-func (client InterfacesClient) GetPreparer(resourceGroupName string, networkInterfaceName string, expand string) (*http.Request, error) {
+func (client InterfacesClient) GetPreparer(resourceGroupName string, networkInterfaceName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"networkInterfaceName": autorest.Encode("path", networkInterfaceName),
 		"resourceGroupName":    autorest.Encode("path", resourceGroupName),
 		"subscriptionId":       autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
-	}
-	if len(expand) > 0 {
-		queryParameters["$expand"] = autorest.Encode("query", expand)
 	}
 
 	preparer := autorest.CreatePreparer(
@@ -275,97 +281,16 @@ func (client InterfacesClient) GetResponder(resp *http.Response) (result Interfa
 	return
 }
 
-// GetEffectiveRouteTable gets all route tables applied to a network interface.
-// This method may poll for completion. Polling can be canceled by passing the
-// cancel channel argument. The channel will be used to cancel polling and any
-// outstanding HTTP requests.
-//
-// resourceGroupName is the name of the resource group. networkInterfaceName is
-// the name of the network interface.
-func (client InterfacesClient) GetEffectiveRouteTable(resourceGroupName string, networkInterfaceName string, cancel <-chan struct{}) (<-chan EffectiveRouteListResult, <-chan error) {
-	resultChan := make(chan EffectiveRouteListResult, 1)
-	errChan := make(chan error, 1)
-	go func() {
-		var err error
-		var result EffectiveRouteListResult
-		defer func() {
-			resultChan <- result
-			errChan <- err
-			close(resultChan)
-			close(errChan)
-		}()
-		req, err := client.GetEffectiveRouteTablePreparer(resourceGroupName, networkInterfaceName, cancel)
-		if err != nil {
-			err = autorest.NewErrorWithError(err, "network.InterfacesClient", "GetEffectiveRouteTable", nil, "Failure preparing request")
-			return
-		}
-
-		resp, err := client.GetEffectiveRouteTableSender(req)
-		if err != nil {
-			result.Response = autorest.Response{Response: resp}
-			err = autorest.NewErrorWithError(err, "network.InterfacesClient", "GetEffectiveRouteTable", resp, "Failure sending request")
-			return
-		}
-
-		result, err = client.GetEffectiveRouteTableResponder(resp)
-		if err != nil {
-			err = autorest.NewErrorWithError(err, "network.InterfacesClient", "GetEffectiveRouteTable", resp, "Failure responding to request")
-		}
-	}()
-	return resultChan, errChan
-}
-
-// GetEffectiveRouteTablePreparer prepares the GetEffectiveRouteTable request.
-func (client InterfacesClient) GetEffectiveRouteTablePreparer(resourceGroupName string, networkInterfaceName string, cancel <-chan struct{}) (*http.Request, error) {
-	pathParameters := map[string]interface{}{
-		"networkInterfaceName": autorest.Encode("path", networkInterfaceName),
-		"resourceGroupName":    autorest.Encode("path", resourceGroupName),
-		"subscriptionId":       autorest.Encode("path", client.SubscriptionID),
-	}
-
-	const APIVersion = "2017-03-01"
-	queryParameters := map[string]interface{}{
-		"api-version": APIVersion,
-	}
-
-	preparer := autorest.CreatePreparer(
-		autorest.AsPost(),
-		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/networkInterfaces/{networkInterfaceName}/effectiveRouteTable", pathParameters),
-		autorest.WithQueryParameters(queryParameters))
-	return preparer.Prepare(&http.Request{Cancel: cancel})
-}
-
-// GetEffectiveRouteTableSender sends the GetEffectiveRouteTable request. The method will close the
-// http.Response Body if it receives an error.
-func (client InterfacesClient) GetEffectiveRouteTableSender(req *http.Request) (*http.Response, error) {
-	return autorest.SendWithSender(client,
-		req,
-		azure.DoPollForAsynchronous(client.PollingDelay))
-}
-
-// GetEffectiveRouteTableResponder handles the response to the GetEffectiveRouteTable request. The method always
-// closes the http.Response Body.
-func (client InterfacesClient) GetEffectiveRouteTableResponder(resp *http.Response) (result EffectiveRouteListResult, err error) {
-	err = autorest.Respond(
-		resp,
-		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
-		autorest.ByUnmarshallingJSON(&result),
-		autorest.ByClosing())
-	result.Response = autorest.Response{Response: resp}
-	return
-}
-
-// GetVirtualMachineScaleSetNetworkInterface get the specified network
-// interface in a virtual machine scale set.
+// GetVirtualMachineScaleSetNetworkInterface the Get ntework interface
+// operation retreives information about the specified network interface in a
+// virtual machine scale set.
 //
 // resourceGroupName is the name of the resource group.
 // virtualMachineScaleSetName is the name of the virtual machine scale set.
 // virtualmachineIndex is the virtual machine index. networkInterfaceName is
-// the name of the network interface. expand is expands referenced resources.
-func (client InterfacesClient) GetVirtualMachineScaleSetNetworkInterface(resourceGroupName string, virtualMachineScaleSetName string, virtualmachineIndex string, networkInterfaceName string, expand string) (result Interface, err error) {
-	req, err := client.GetVirtualMachineScaleSetNetworkInterfacePreparer(resourceGroupName, virtualMachineScaleSetName, virtualmachineIndex, networkInterfaceName, expand)
+// the name of the network interface.
+func (client InterfacesClient) GetVirtualMachineScaleSetNetworkInterface(resourceGroupName string, virtualMachineScaleSetName string, virtualmachineIndex string, networkInterfaceName string) (result Interface, err error) {
+	req, err := client.GetVirtualMachineScaleSetNetworkInterfacePreparer(resourceGroupName, virtualMachineScaleSetName, virtualmachineIndex, networkInterfaceName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "network.InterfacesClient", "GetVirtualMachineScaleSetNetworkInterface", nil, "Failure preparing request")
 		return
@@ -387,7 +312,7 @@ func (client InterfacesClient) GetVirtualMachineScaleSetNetworkInterface(resourc
 }
 
 // GetVirtualMachineScaleSetNetworkInterfacePreparer prepares the GetVirtualMachineScaleSetNetworkInterface request.
-func (client InterfacesClient) GetVirtualMachineScaleSetNetworkInterfacePreparer(resourceGroupName string, virtualMachineScaleSetName string, virtualmachineIndex string, networkInterfaceName string, expand string) (*http.Request, error) {
+func (client InterfacesClient) GetVirtualMachineScaleSetNetworkInterfacePreparer(resourceGroupName string, virtualMachineScaleSetName string, virtualmachineIndex string, networkInterfaceName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"networkInterfaceName":       autorest.Encode("path", networkInterfaceName),
 		"resourceGroupName":          autorest.Encode("path", resourceGroupName),
@@ -396,18 +321,15 @@ func (client InterfacesClient) GetVirtualMachineScaleSetNetworkInterfacePreparer
 		"virtualMachineScaleSetName": autorest.Encode("path", virtualMachineScaleSetName),
 	}
 
-	const APIVersion = "2016-09-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
-	}
-	if len(expand) > 0 {
-		queryParameters["$expand"] = autorest.Encode("query", expand)
 	}
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/microsoft.Compute/virtualMachineScaleSets/{virtualMachineScaleSetName}/virtualMachines/{virtualmachineIndex}/networkInterfaces/{networkInterfaceName}", pathParameters),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/microsoft.compute/virtualMachineScaleSets/{virtualMachineScaleSetName}/virtualMachines/{virtualmachineIndex}/networkInterfaces/{networkInterfaceName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare(&http.Request{})
 }
@@ -431,7 +353,8 @@ func (client InterfacesClient) GetVirtualMachineScaleSetNetworkInterfaceResponde
 	return
 }
 
-// List gets all network interfaces in a resource group.
+// List the List networkInterfaces opertion retrieves all the networkInterfaces
+// in a resource group.
 //
 // resourceGroupName is the name of the resource group.
 func (client InterfacesClient) List(resourceGroupName string) (result InterfaceListResult, err error) {
@@ -463,7 +386,7 @@ func (client InterfacesClient) ListPreparer(resourceGroupName string) (*http.Req
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -519,7 +442,53 @@ func (client InterfacesClient) ListNextResults(lastResults InterfaceListResult) 
 	return
 }
 
-// ListAll gets all network interfaces in a subscription.
+// ListComplete gets all elements from the list without paging.
+func (client InterfacesClient) ListComplete(resourceGroupName string, cancel <-chan struct{}) (<-chan Interface, <-chan error) {
+	resultChan := make(chan Interface)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.List(resourceGroupName)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
+}
+
+// ListAll the List networkInterfaces opertion retrieves all the
+// networkInterfaces in a subscription.
 func (client InterfacesClient) ListAll() (result InterfaceListResult, err error) {
 	req, err := client.ListAllPreparer()
 	if err != nil {
@@ -548,7 +517,7 @@ func (client InterfacesClient) ListAllPreparer() (*http.Request, error) {
 		"subscriptionId": autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -604,90 +573,54 @@ func (client InterfacesClient) ListAllNextResults(lastResults InterfaceListResul
 	return
 }
 
-// ListEffectiveNetworkSecurityGroups gets all network security groups applied
-// to a network interface. This method may poll for completion. Polling can be
-// canceled by passing the cancel channel argument. The channel will be used to
-// cancel polling and any outstanding HTTP requests.
-//
-// resourceGroupName is the name of the resource group. networkInterfaceName is
-// the name of the network interface.
-func (client InterfacesClient) ListEffectiveNetworkSecurityGroups(resourceGroupName string, networkInterfaceName string, cancel <-chan struct{}) (<-chan EffectiveNetworkSecurityGroupListResult, <-chan error) {
-	resultChan := make(chan EffectiveNetworkSecurityGroupListResult, 1)
+// ListAllComplete gets all elements from the list without paging.
+func (client InterfacesClient) ListAllComplete(cancel <-chan struct{}) (<-chan Interface, <-chan error) {
+	resultChan := make(chan Interface)
 	errChan := make(chan error, 1)
 	go func() {
-		var err error
-		var result EffectiveNetworkSecurityGroupListResult
 		defer func() {
-			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
-		req, err := client.ListEffectiveNetworkSecurityGroupsPreparer(resourceGroupName, networkInterfaceName, cancel)
+		list, err := client.ListAll()
 		if err != nil {
-			err = autorest.NewErrorWithError(err, "network.InterfacesClient", "ListEffectiveNetworkSecurityGroups", nil, "Failure preparing request")
+			errChan <- err
 			return
 		}
-
-		resp, err := client.ListEffectiveNetworkSecurityGroupsSender(req)
-		if err != nil {
-			result.Response = autorest.Response{Response: resp}
-			err = autorest.NewErrorWithError(err, "network.InterfacesClient", "ListEffectiveNetworkSecurityGroups", resp, "Failure sending request")
-			return
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
 		}
-
-		result, err = client.ListEffectiveNetworkSecurityGroupsResponder(resp)
-		if err != nil {
-			err = autorest.NewErrorWithError(err, "network.InterfacesClient", "ListEffectiveNetworkSecurityGroups", resp, "Failure responding to request")
+		for list.NextLink != nil {
+			list, err = client.ListAllNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
 		}
 	}()
 	return resultChan, errChan
 }
 
-// ListEffectiveNetworkSecurityGroupsPreparer prepares the ListEffectiveNetworkSecurityGroups request.
-func (client InterfacesClient) ListEffectiveNetworkSecurityGroupsPreparer(resourceGroupName string, networkInterfaceName string, cancel <-chan struct{}) (*http.Request, error) {
-	pathParameters := map[string]interface{}{
-		"networkInterfaceName": autorest.Encode("path", networkInterfaceName),
-		"resourceGroupName":    autorest.Encode("path", resourceGroupName),
-		"subscriptionId":       autorest.Encode("path", client.SubscriptionID),
-	}
-
-	const APIVersion = "2017-03-01"
-	queryParameters := map[string]interface{}{
-		"api-version": APIVersion,
-	}
-
-	preparer := autorest.CreatePreparer(
-		autorest.AsPost(),
-		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/networkInterfaces/{networkInterfaceName}/effectiveNetworkSecurityGroups", pathParameters),
-		autorest.WithQueryParameters(queryParameters))
-	return preparer.Prepare(&http.Request{Cancel: cancel})
-}
-
-// ListEffectiveNetworkSecurityGroupsSender sends the ListEffectiveNetworkSecurityGroups request. The method will close the
-// http.Response Body if it receives an error.
-func (client InterfacesClient) ListEffectiveNetworkSecurityGroupsSender(req *http.Request) (*http.Response, error) {
-	return autorest.SendWithSender(client,
-		req,
-		azure.DoPollForAsynchronous(client.PollingDelay))
-}
-
-// ListEffectiveNetworkSecurityGroupsResponder handles the response to the ListEffectiveNetworkSecurityGroups request. The method always
-// closes the http.Response Body.
-func (client InterfacesClient) ListEffectiveNetworkSecurityGroupsResponder(resp *http.Response) (result EffectiveNetworkSecurityGroupListResult, err error) {
-	err = autorest.Respond(
-		resp,
-		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
-		autorest.ByUnmarshallingJSON(&result),
-		autorest.ByClosing())
-	result.Response = autorest.Response{Response: resp}
-	return
-}
-
-// ListVirtualMachineScaleSetNetworkInterfaces gets all network interfaces in a
-// virtual machine scale set.
+// ListVirtualMachineScaleSetNetworkInterfaces the list network interface
+// operation retrieves information about all network interfaces in a virtual
+// machine scale set.
 //
 // resourceGroupName is the name of the resource group.
 // virtualMachineScaleSetName is the name of the virtual machine scale set.
@@ -721,7 +654,7 @@ func (client InterfacesClient) ListVirtualMachineScaleSetNetworkInterfacesPrepar
 		"virtualMachineScaleSetName": autorest.Encode("path", virtualMachineScaleSetName),
 	}
 
-	const APIVersion = "2016-09-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -729,7 +662,7 @@ func (client InterfacesClient) ListVirtualMachineScaleSetNetworkInterfacesPrepar
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/microsoft.Compute/virtualMachineScaleSets/{virtualMachineScaleSetName}/networkInterfaces", pathParameters),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/microsoft.compute/virtualMachineScaleSets/{virtualMachineScaleSetName}/networkInterfaces", pathParameters),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare(&http.Request{})
 }
@@ -777,8 +710,54 @@ func (client InterfacesClient) ListVirtualMachineScaleSetNetworkInterfacesNextRe
 	return
 }
 
-// ListVirtualMachineScaleSetVMNetworkInterfaces gets information about all
-// network interfaces in a virtual machine in a virtual machine scale set.
+// ListVirtualMachineScaleSetNetworkInterfacesComplete gets all elements from the list without paging.
+func (client InterfacesClient) ListVirtualMachineScaleSetNetworkInterfacesComplete(resourceGroupName string, virtualMachineScaleSetName string, cancel <-chan struct{}) (<-chan Interface, <-chan error) {
+	resultChan := make(chan Interface)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.ListVirtualMachineScaleSetNetworkInterfaces(resourceGroupName, virtualMachineScaleSetName)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListVirtualMachineScaleSetNetworkInterfacesNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
+}
+
+// ListVirtualMachineScaleSetVMNetworkInterfaces the list network interface
+// operation retrieves information about all network interfaces in a virtual
+// machine from a virtual machine scale set.
 //
 // resourceGroupName is the name of the resource group.
 // virtualMachineScaleSetName is the name of the virtual machine scale set.
@@ -814,7 +793,7 @@ func (client InterfacesClient) ListVirtualMachineScaleSetVMNetworkInterfacesPrep
 		"virtualMachineScaleSetName": autorest.Encode("path", virtualMachineScaleSetName),
 	}
 
-	const APIVersion = "2016-09-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -822,7 +801,7 @@ func (client InterfacesClient) ListVirtualMachineScaleSetVMNetworkInterfacesPrep
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/microsoft.Compute/virtualMachineScaleSets/{virtualMachineScaleSetName}/virtualMachines/{virtualmachineIndex}/networkInterfaces", pathParameters),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/microsoft.compute/virtualMachineScaleSets/{virtualMachineScaleSetName}/virtualMachines/{virtualmachineIndex}/networkInterfaces", pathParameters),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare(&http.Request{})
 }
@@ -868,4 +847,49 @@ func (client InterfacesClient) ListVirtualMachineScaleSetVMNetworkInterfacesNext
 	}
 
 	return
+}
+
+// ListVirtualMachineScaleSetVMNetworkInterfacesComplete gets all elements from the list without paging.
+func (client InterfacesClient) ListVirtualMachineScaleSetVMNetworkInterfacesComplete(resourceGroupName string, virtualMachineScaleSetName string, virtualmachineIndex string, cancel <-chan struct{}) (<-chan Interface, <-chan error) {
+	resultChan := make(chan Interface)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.ListVirtualMachineScaleSetVMNetworkInterfaces(resourceGroupName, virtualMachineScaleSetName, virtualmachineIndex)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListVirtualMachineScaleSetVMNetworkInterfacesNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
 }

@@ -806,8 +806,8 @@ func (az *Cloud) reconcileSecurityGroup(sg network.SecurityGroup, clusterName st
 					DestinationPortRange:     to.StringPtr(strconv.Itoa(int(port.Port))),
 					SourceAddressPrefix:      to.StringPtr(sourceAddressPrefixes[j]),
 					DestinationAddressPrefix: to.StringPtr("*"),
-					Access:    network.SecurityRuleAccessAllow,
-					Direction: network.SecurityRuleDirectionInbound,
+					Access:    network.Allow,
+					Direction: network.Inbound,
 				},
 			}
 		}

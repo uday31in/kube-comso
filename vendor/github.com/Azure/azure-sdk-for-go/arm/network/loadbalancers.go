@@ -19,12 +19,16 @@ package network
 // regenerated.
 
 import (
+	"net/http"
+
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"net/http"
 )
 
-// LoadBalancersClient is the composite Swagger for Network Client
+// LoadBalancersClient is the the Windows Azure Network management API provides
+// a RESTful set of web services that interact with Windows Azure Networks
+// service to manage your network resrources. The API has entities that capture
+// the relationship between an end user and the Windows Azure Networks service.
 type LoadBalancersClient struct {
 	ManagementClient
 }
@@ -41,14 +45,14 @@ func NewLoadBalancersClientWithBaseURI(baseURI string, subscriptionID string) Lo
 	return LoadBalancersClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
 
-// CreateOrUpdate creates or updates a load balancer. This method may poll for
-// completion. Polling can be canceled by passing the cancel channel argument.
-// The channel will be used to cancel polling and any outstanding HTTP
-// requests.
+// CreateOrUpdate the Put LoadBalancer operation creates/updates a LoadBalancer
+// This method may poll for completion. Polling can be canceled by passing the
+// cancel channel argument. The channel will be used to cancel polling and any
+// outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. loadBalancerName is the
-// name of the load balancer. parameters is parameters supplied to the create
-// or update load balancer operation.
+// name of the loadBalancer. parameters is parameters supplied to the
+// create/delete LoadBalancer operation
 func (client LoadBalancersClient) CreateOrUpdate(resourceGroupName string, loadBalancerName string, parameters LoadBalancer, cancel <-chan struct{}) (<-chan LoadBalancer, <-chan error) {
 	resultChan := make(chan LoadBalancer, 1)
 	errChan := make(chan error, 1)
@@ -56,8 +60,10 @@ func (client LoadBalancersClient) CreateOrUpdate(resourceGroupName string, loadB
 		var err error
 		var result LoadBalancer
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -90,7 +96,7 @@ func (client LoadBalancersClient) CreateOrUpdatePreparer(resourceGroupName strin
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -126,13 +132,13 @@ func (client LoadBalancersClient) CreateOrUpdateResponder(resp *http.Response) (
 	return
 }
 
-// Delete deletes the specified load balancer. This method may poll for
-// completion. Polling can be canceled by passing the cancel channel argument.
-// The channel will be used to cancel polling and any outstanding HTTP
-// requests.
+// Delete the delete loadbalancer operation deletes the specified loadbalancer.
+// This method may poll for completion. Polling can be canceled by passing the
+// cancel channel argument. The channel will be used to cancel polling and any
+// outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. loadBalancerName is the
-// name of the load balancer.
+// name of the loadBalancer.
 func (client LoadBalancersClient) Delete(resourceGroupName string, loadBalancerName string, cancel <-chan struct{}) (<-chan autorest.Response, <-chan error) {
 	resultChan := make(chan autorest.Response, 1)
 	errChan := make(chan error, 1)
@@ -140,8 +146,10 @@ func (client LoadBalancersClient) Delete(resourceGroupName string, loadBalancerN
 		var err error
 		var result autorest.Response
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -174,7 +182,7 @@ func (client LoadBalancersClient) DeletePreparer(resourceGroupName string, loadB
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -207,12 +215,13 @@ func (client LoadBalancersClient) DeleteResponder(resp *http.Response) (result a
 	return
 }
 
-// Get gets the specified load balancer.
+// Get the Get ntework interface operation retreives information about the
+// specified network interface.
 //
 // resourceGroupName is the name of the resource group. loadBalancerName is the
-// name of the load balancer. expand is expands referenced resources.
-func (client LoadBalancersClient) Get(resourceGroupName string, loadBalancerName string, expand string) (result LoadBalancer, err error) {
-	req, err := client.GetPreparer(resourceGroupName, loadBalancerName, expand)
+// name of the loadBalancer.
+func (client LoadBalancersClient) Get(resourceGroupName string, loadBalancerName string, nope string) (result LoadBalancer, err error) {
+	req, err := client.GetPreparer(resourceGroupName, loadBalancerName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "network.LoadBalancersClient", "Get", nil, "Failure preparing request")
 		return
@@ -234,19 +243,16 @@ func (client LoadBalancersClient) Get(resourceGroupName string, loadBalancerName
 }
 
 // GetPreparer prepares the Get request.
-func (client LoadBalancersClient) GetPreparer(resourceGroupName string, loadBalancerName string, expand string) (*http.Request, error) {
+func (client LoadBalancersClient) GetPreparer(resourceGroupName string, loadBalancerName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"loadBalancerName":  autorest.Encode("path", loadBalancerName),
 		"resourceGroupName": autorest.Encode("path", resourceGroupName),
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
-	}
-	if len(expand) > 0 {
-		queryParameters["$expand"] = autorest.Encode("query", expand)
 	}
 
 	preparer := autorest.CreatePreparer(
@@ -276,7 +282,8 @@ func (client LoadBalancersClient) GetResponder(resp *http.Response) (result Load
 	return
 }
 
-// List gets all the load balancers in a resource group.
+// List the List loadBalancer opertion retrieves all the loadbalancers in a
+// resource group.
 //
 // resourceGroupName is the name of the resource group.
 func (client LoadBalancersClient) List(resourceGroupName string) (result LoadBalancerListResult, err error) {
@@ -308,7 +315,7 @@ func (client LoadBalancersClient) ListPreparer(resourceGroupName string) (*http.
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -364,7 +371,53 @@ func (client LoadBalancersClient) ListNextResults(lastResults LoadBalancerListRe
 	return
 }
 
-// ListAll gets all the load balancers in a subscription.
+// ListComplete gets all elements from the list without paging.
+func (client LoadBalancersClient) ListComplete(resourceGroupName string, cancel <-chan struct{}) (<-chan LoadBalancer, <-chan error) {
+	resultChan := make(chan LoadBalancer)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.List(resourceGroupName)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
+}
+
+// ListAll the List loadBalancer opertion retrieves all the loadbalancers in a
+// subscription.
 func (client LoadBalancersClient) ListAll() (result LoadBalancerListResult, err error) {
 	req, err := client.ListAllPreparer()
 	if err != nil {
@@ -393,7 +446,7 @@ func (client LoadBalancersClient) ListAllPreparer() (*http.Request, error) {
 		"subscriptionId": autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -447,4 +500,49 @@ func (client LoadBalancersClient) ListAllNextResults(lastResults LoadBalancerLis
 	}
 
 	return
+}
+
+// ListAllComplete gets all elements from the list without paging.
+func (client LoadBalancersClient) ListAllComplete(cancel <-chan struct{}) (<-chan LoadBalancer, <-chan error) {
+	resultChan := make(chan LoadBalancer)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.ListAll()
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListAllNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
 }

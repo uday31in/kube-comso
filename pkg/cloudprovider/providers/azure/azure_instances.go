@@ -30,6 +30,7 @@ import (
 // NodeAddresses returns the addresses of the specified instance.
 func (az *Cloud) NodeAddresses(name types.NodeName) ([]v1.NodeAddress, error) {
 	if az.UseInstanceMetadata {
+		glog.Warningf("Inside NodeAddresses:UseInstanceMetadata")
 		ipAddress := IPAddress{}
 		err := az.metadata.Object("instance/network/interface/0/ipv4/ipAddress/0", &ipAddress)
 		if err != nil {

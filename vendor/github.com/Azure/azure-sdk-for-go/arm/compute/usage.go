@@ -80,7 +80,7 @@ func (client UsageClient) ListPreparer(location string) (*http.Request, error) {
 		"subscriptionId": autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2016-04-30-preview"
+	const APIVersion = "2016-03-30"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -134,4 +134,49 @@ func (client UsageClient) ListNextResults(lastResults ListUsagesResult) (result 
 	}
 
 	return
+}
+
+// ListComplete gets all elements from the list without paging.
+func (client UsageClient) ListComplete(location string, cancel <-chan struct{}) (<-chan Usage, <-chan error) {
+	resultChan := make(chan Usage)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.List(location)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
 }

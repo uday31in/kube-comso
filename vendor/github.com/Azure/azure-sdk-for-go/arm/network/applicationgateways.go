@@ -21,11 +21,14 @@ package network
 import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/go-autorest/autorest/validation"
 	"net/http"
 )
 
-// ApplicationGatewaysClient is the composite Swagger for Network Client
+// ApplicationGatewaysClient is the the Windows Azure Network management API
+// provides a RESTful set of web services that interact with Windows Azure
+// Networks service to manage your network resrources. The API has entities
+// that capture the relationship between an end user and the Windows Azure
+// Networks service.
 type ApplicationGatewaysClient struct {
 	ManagementClient
 }
@@ -42,124 +45,25 @@ func NewApplicationGatewaysClientWithBaseURI(baseURI string, subscriptionID stri
 	return ApplicationGatewaysClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
 
-// BackendHealth gets the backend health of the specified application gateway
-// in a resource group. This method may poll for completion. Polling can be
+// CreateOrUpdate the Put ApplicationGateway operation creates/updates a
+// ApplicationGateway This method may poll for completion. Polling can be
 // canceled by passing the cancel channel argument. The channel will be used to
 // cancel polling and any outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. applicationGatewayName
-// is the name of the application gateway. expand is expands BackendAddressPool
-// and BackendHttpSettings referenced in backend health.
-func (client ApplicationGatewaysClient) BackendHealth(resourceGroupName string, applicationGatewayName string, expand string, cancel <-chan struct{}) (<-chan ApplicationGatewayBackendHealth, <-chan error) {
-	resultChan := make(chan ApplicationGatewayBackendHealth, 1)
-	errChan := make(chan error, 1)
-	go func() {
-		var err error
-		var result ApplicationGatewayBackendHealth
-		defer func() {
-			resultChan <- result
-			errChan <- err
-			close(resultChan)
-			close(errChan)
-		}()
-		req, err := client.BackendHealthPreparer(resourceGroupName, applicationGatewayName, expand, cancel)
-		if err != nil {
-			err = autorest.NewErrorWithError(err, "network.ApplicationGatewaysClient", "BackendHealth", nil, "Failure preparing request")
-			return
-		}
-
-		resp, err := client.BackendHealthSender(req)
-		if err != nil {
-			result.Response = autorest.Response{Response: resp}
-			err = autorest.NewErrorWithError(err, "network.ApplicationGatewaysClient", "BackendHealth", resp, "Failure sending request")
-			return
-		}
-
-		result, err = client.BackendHealthResponder(resp)
-		if err != nil {
-			err = autorest.NewErrorWithError(err, "network.ApplicationGatewaysClient", "BackendHealth", resp, "Failure responding to request")
-		}
-	}()
-	return resultChan, errChan
-}
-
-// BackendHealthPreparer prepares the BackendHealth request.
-func (client ApplicationGatewaysClient) BackendHealthPreparer(resourceGroupName string, applicationGatewayName string, expand string, cancel <-chan struct{}) (*http.Request, error) {
-	pathParameters := map[string]interface{}{
-		"applicationGatewayName": autorest.Encode("path", applicationGatewayName),
-		"resourceGroupName":      autorest.Encode("path", resourceGroupName),
-		"subscriptionId":         autorest.Encode("path", client.SubscriptionID),
-	}
-
-	const APIVersion = "2017-03-01"
-	queryParameters := map[string]interface{}{
-		"api-version": APIVersion,
-	}
-	if len(expand) > 0 {
-		queryParameters["$expand"] = autorest.Encode("query", expand)
-	}
-
-	preparer := autorest.CreatePreparer(
-		autorest.AsPost(),
-		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/applicationGateways/{applicationGatewayName}/backendhealth", pathParameters),
-		autorest.WithQueryParameters(queryParameters))
-	return preparer.Prepare(&http.Request{Cancel: cancel})
-}
-
-// BackendHealthSender sends the BackendHealth request. The method will close the
-// http.Response Body if it receives an error.
-func (client ApplicationGatewaysClient) BackendHealthSender(req *http.Request) (*http.Response, error) {
-	return autorest.SendWithSender(client,
-		req,
-		azure.DoPollForAsynchronous(client.PollingDelay))
-}
-
-// BackendHealthResponder handles the response to the BackendHealth request. The method always
-// closes the http.Response Body.
-func (client ApplicationGatewaysClient) BackendHealthResponder(resp *http.Response) (result ApplicationGatewayBackendHealth, err error) {
-	err = autorest.Respond(
-		resp,
-		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
-		autorest.ByUnmarshallingJSON(&result),
-		autorest.ByClosing())
-	result.Response = autorest.Response{Response: resp}
-	return
-}
-
-// CreateOrUpdate creates or updates the specified application gateway. This
-// method may poll for completion. Polling can be canceled by passing the
-// cancel channel argument. The channel will be used to cancel polling and any
-// outstanding HTTP requests.
-//
-// resourceGroupName is the name of the resource group. applicationGatewayName
-// is the name of the application gateway. parameters is parameters supplied to
-// the create or update application gateway operation.
+// is the name of the ApplicationGateway. parameters is parameters supplied to
+// the create/delete ApplicationGateway operation
 func (client ApplicationGatewaysClient) CreateOrUpdate(resourceGroupName string, applicationGatewayName string, parameters ApplicationGateway, cancel <-chan struct{}) (<-chan ApplicationGateway, <-chan error) {
 	resultChan := make(chan ApplicationGateway, 1)
 	errChan := make(chan error, 1)
-	if err := validation.Validate([]validation.Validation{
-		{TargetValue: parameters,
-			Constraints: []validation.Constraint{{Target: "parameters.ApplicationGatewayPropertiesFormat", Name: validation.Null, Rule: false,
-				Chain: []validation.Constraint{{Target: "parameters.ApplicationGatewayPropertiesFormat.WebApplicationFirewallConfiguration", Name: validation.Null, Rule: false,
-					Chain: []validation.Constraint{{Target: "parameters.ApplicationGatewayPropertiesFormat.WebApplicationFirewallConfiguration.Enabled", Name: validation.Null, Rule: true, Chain: nil},
-						{Target: "parameters.ApplicationGatewayPropertiesFormat.WebApplicationFirewallConfiguration.RuleSetType", Name: validation.Null, Rule: true, Chain: nil},
-						{Target: "parameters.ApplicationGatewayPropertiesFormat.WebApplicationFirewallConfiguration.RuleSetVersion", Name: validation.Null, Rule: true, Chain: nil},
-					}},
-				}}}}}); err != nil {
-		errChan <- validation.NewErrorWithValidationError(err, "network.ApplicationGatewaysClient", "CreateOrUpdate")
-		close(errChan)
-		close(resultChan)
-		return resultChan, errChan
-	}
-
 	go func() {
 		var err error
 		var result ApplicationGateway
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -192,7 +96,7 @@ func (client ApplicationGatewaysClient) CreateOrUpdatePreparer(resourceGroupName
 		"subscriptionId":         autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -228,13 +132,13 @@ func (client ApplicationGatewaysClient) CreateOrUpdateResponder(resp *http.Respo
 	return
 }
 
-// Delete deletes the specified application gateway. This method may poll for
-// completion. Polling can be canceled by passing the cancel channel argument.
-// The channel will be used to cancel polling and any outstanding HTTP
-// requests.
+// Delete the delete applicationgateway operation deletes the specified
+// applicationgateway. This method may poll for completion. Polling can be
+// canceled by passing the cancel channel argument. The channel will be used to
+// cancel polling and any outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. applicationGatewayName
-// is the name of the application gateway.
+// is the name of the applicationgateway.
 func (client ApplicationGatewaysClient) Delete(resourceGroupName string, applicationGatewayName string, cancel <-chan struct{}) (<-chan autorest.Response, <-chan error) {
 	resultChan := make(chan autorest.Response, 1)
 	errChan := make(chan error, 1)
@@ -242,8 +146,10 @@ func (client ApplicationGatewaysClient) Delete(resourceGroupName string, applica
 		var err error
 		var result autorest.Response
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -276,7 +182,7 @@ func (client ApplicationGatewaysClient) DeletePreparer(resourceGroupName string,
 		"subscriptionId":         autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -303,16 +209,17 @@ func (client ApplicationGatewaysClient) DeleteResponder(resp *http.Response) (re
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusAccepted, http.StatusNoContent, http.StatusOK),
+		azure.WithErrorUnlessStatusCode(http.StatusNoContent, http.StatusAccepted, http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
 	return
 }
 
-// Get gets the specified application gateway.
+// Get the Get applicationgateway operation retreives information about the
+// specified applicationgateway.
 //
 // resourceGroupName is the name of the resource group. applicationGatewayName
-// is the name of the application gateway.
+// is the name of the applicationgateway.
 func (client ApplicationGatewaysClient) Get(resourceGroupName string, applicationGatewayName string) (result ApplicationGateway, err error) {
 	req, err := client.GetPreparer(resourceGroupName, applicationGatewayName)
 	if err != nil {
@@ -343,7 +250,7 @@ func (client ApplicationGatewaysClient) GetPreparer(resourceGroupName string, ap
 		"subscriptionId":         autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -375,7 +282,8 @@ func (client ApplicationGatewaysClient) GetResponder(resp *http.Response) (resul
 	return
 }
 
-// List lists all application gateways in a resource group.
+// List the List ApplicationGateway opertion retrieves all the
+// applicationgateways in a resource group.
 //
 // resourceGroupName is the name of the resource group.
 func (client ApplicationGatewaysClient) List(resourceGroupName string) (result ApplicationGatewayListResult, err error) {
@@ -407,7 +315,7 @@ func (client ApplicationGatewaysClient) ListPreparer(resourceGroupName string) (
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -463,7 +371,53 @@ func (client ApplicationGatewaysClient) ListNextResults(lastResults ApplicationG
 	return
 }
 
-// ListAll gets all the application gateways in a subscription.
+// ListComplete gets all elements from the list without paging.
+func (client ApplicationGatewaysClient) ListComplete(resourceGroupName string, cancel <-chan struct{}) (<-chan ApplicationGateway, <-chan error) {
+	resultChan := make(chan ApplicationGateway)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.List(resourceGroupName)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
+}
+
+// ListAll the List applicationgateway opertion retrieves all the
+// applicationgateways in a subscription.
 func (client ApplicationGatewaysClient) ListAll() (result ApplicationGatewayListResult, err error) {
 	req, err := client.ListAllPreparer()
 	if err != nil {
@@ -492,7 +446,7 @@ func (client ApplicationGatewaysClient) ListAllPreparer() (*http.Request, error)
 		"subscriptionId": autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -548,72 +502,56 @@ func (client ApplicationGatewaysClient) ListAllNextResults(lastResults Applicati
 	return
 }
 
-// ListAvailableWafRuleSets lists all available web application firewall rule
-// sets.
-func (client ApplicationGatewaysClient) ListAvailableWafRuleSets() (result ApplicationGatewayAvailableWafRuleSetsResult, err error) {
-	req, err := client.ListAvailableWafRuleSetsPreparer()
-	if err != nil {
-		err = autorest.NewErrorWithError(err, "network.ApplicationGatewaysClient", "ListAvailableWafRuleSets", nil, "Failure preparing request")
-		return
-	}
-
-	resp, err := client.ListAvailableWafRuleSetsSender(req)
-	if err != nil {
-		result.Response = autorest.Response{Response: resp}
-		err = autorest.NewErrorWithError(err, "network.ApplicationGatewaysClient", "ListAvailableWafRuleSets", resp, "Failure sending request")
-		return
-	}
-
-	result, err = client.ListAvailableWafRuleSetsResponder(resp)
-	if err != nil {
-		err = autorest.NewErrorWithError(err, "network.ApplicationGatewaysClient", "ListAvailableWafRuleSets", resp, "Failure responding to request")
-	}
-
-	return
+// ListAllComplete gets all elements from the list without paging.
+func (client ApplicationGatewaysClient) ListAllComplete(cancel <-chan struct{}) (<-chan ApplicationGateway, <-chan error) {
+	resultChan := make(chan ApplicationGateway)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.ListAll()
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListAllNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
 }
 
-// ListAvailableWafRuleSetsPreparer prepares the ListAvailableWafRuleSets request.
-func (client ApplicationGatewaysClient) ListAvailableWafRuleSetsPreparer() (*http.Request, error) {
-	pathParameters := map[string]interface{}{
-		"subscriptionId": autorest.Encode("path", client.SubscriptionID),
-	}
-
-	const APIVersion = "2017-03-01"
-	queryParameters := map[string]interface{}{
-		"api-version": APIVersion,
-	}
-
-	preparer := autorest.CreatePreparer(
-		autorest.AsGet(),
-		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPathParameters("/subscriptions/{subscriptionId}/providers/Microsoft.Network/applicationGatewayAvailableWafRuleSets", pathParameters),
-		autorest.WithQueryParameters(queryParameters))
-	return preparer.Prepare(&http.Request{})
-}
-
-// ListAvailableWafRuleSetsSender sends the ListAvailableWafRuleSets request. The method will close the
-// http.Response Body if it receives an error.
-func (client ApplicationGatewaysClient) ListAvailableWafRuleSetsSender(req *http.Request) (*http.Response, error) {
-	return autorest.SendWithSender(client, req)
-}
-
-// ListAvailableWafRuleSetsResponder handles the response to the ListAvailableWafRuleSets request. The method always
-// closes the http.Response Body.
-func (client ApplicationGatewaysClient) ListAvailableWafRuleSetsResponder(resp *http.Response) (result ApplicationGatewayAvailableWafRuleSetsResult, err error) {
-	err = autorest.Respond(
-		resp,
-		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusOK),
-		autorest.ByUnmarshallingJSON(&result),
-		autorest.ByClosing())
-	result.Response = autorest.Response{Response: resp}
-	return
-}
-
-// Start starts the specified application gateway. This method may poll for
-// completion. Polling can be canceled by passing the cancel channel argument.
-// The channel will be used to cancel polling and any outstanding HTTP
-// requests.
+// Start the Start ApplicationGateway operation starts application gatewayin
+// the specified resource group through Network resource provider. This method
+// may poll for completion. Polling can be canceled by passing the cancel
+// channel argument. The channel will be used to cancel polling and any
+// outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. applicationGatewayName
 // is the name of the application gateway.
@@ -624,8 +562,10 @@ func (client ApplicationGatewaysClient) Start(resourceGroupName string, applicat
 		var err error
 		var result autorest.Response
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -658,7 +598,7 @@ func (client ApplicationGatewaysClient) StartPreparer(resourceGroupName string, 
 		"subscriptionId":         autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -691,10 +631,11 @@ func (client ApplicationGatewaysClient) StartResponder(resp *http.Response) (res
 	return
 }
 
-// Stop stops the specified application gateway in a resource group. This
-// method may poll for completion. Polling can be canceled by passing the
-// cancel channel argument. The channel will be used to cancel polling and any
-// outstanding HTTP requests.
+// Stop the STOP ApplicationGateway operation stops application gatewayin the
+// specified resource group through Network resource provider. This method may
+// poll for completion. Polling can be canceled by passing the cancel channel
+// argument. The channel will be used to cancel polling and any outstanding
+// HTTP requests.
 //
 // resourceGroupName is the name of the resource group. applicationGatewayName
 // is the name of the application gateway.
@@ -705,8 +646,10 @@ func (client ApplicationGatewaysClient) Stop(resourceGroupName string, applicati
 		var err error
 		var result autorest.Response
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -739,7 +682,7 @@ func (client ApplicationGatewaysClient) StopPreparer(resourceGroupName string, a
 		"subscriptionId":         autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -766,7 +709,7 @@ func (client ApplicationGatewaysClient) StopResponder(resp *http.Response) (resu
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
+		azure.WithErrorUnlessStatusCode(http.StatusAccepted, http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
 	return

@@ -24,7 +24,10 @@ import (
 	"net/http"
 )
 
-// RoutesClient is the composite Swagger for Network Client
+// RoutesClient is the the Windows Azure Network management API provides a
+// RESTful set of web services that interact with Windows Azure Networks
+// service to manage your network resrources. The API has entities that capture
+// the relationship between an end user and the Windows Azure Networks service.
 type RoutesClient struct {
 	ManagementClient
 }
@@ -39,14 +42,14 @@ func NewRoutesClientWithBaseURI(baseURI string, subscriptionID string) RoutesCli
 	return RoutesClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
 
-// CreateOrUpdate creates or updates a route in the specified route table. This
-// method may poll for completion. Polling can be canceled by passing the
-// cancel channel argument. The channel will be used to cancel polling and any
-// outstanding HTTP requests.
+// CreateOrUpdate the Put route operation creates/updates a route in the
+// specified route table This method may poll for completion. Polling can be
+// canceled by passing the cancel channel argument. The channel will be used to
+// cancel polling and any outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. routeTableName is the
 // name of the route table. routeName is the name of the route. routeParameters
-// is parameters supplied to the create or update route operation.
+// is parameters supplied to the create/update routeoperation
 func (client RoutesClient) CreateOrUpdate(resourceGroupName string, routeTableName string, routeName string, routeParameters Route, cancel <-chan struct{}) (<-chan Route, <-chan error) {
 	resultChan := make(chan Route, 1)
 	errChan := make(chan error, 1)
@@ -54,8 +57,10 @@ func (client RoutesClient) CreateOrUpdate(resourceGroupName string, routeTableNa
 		var err error
 		var result Route
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -89,7 +94,7 @@ func (client RoutesClient) CreateOrUpdatePreparer(resourceGroupName string, rout
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -118,17 +123,17 @@ func (client RoutesClient) CreateOrUpdateResponder(resp *http.Response) (result 
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
+		azure.WithErrorUnlessStatusCode(http.StatusCreated, http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
 	result.Response = autorest.Response{Response: resp}
 	return
 }
 
-// Delete deletes the specified route from a route table. This method may poll
-// for completion. Polling can be canceled by passing the cancel channel
-// argument. The channel will be used to cancel polling and any outstanding
-// HTTP requests.
+// Delete the delete route operation deletes the specified route from a route
+// table. This method may poll for completion. Polling can be canceled by
+// passing the cancel channel argument. The channel will be used to cancel
+// polling and any outstanding HTTP requests.
 //
 // resourceGroupName is the name of the resource group. routeTableName is the
 // name of the route table. routeName is the name of the route.
@@ -139,8 +144,10 @@ func (client RoutesClient) Delete(resourceGroupName string, routeTableName strin
 		var err error
 		var result autorest.Response
 		defer func() {
+			if err != nil {
+				errChan <- err
+			}
 			resultChan <- result
-			errChan <- err
 			close(resultChan)
 			close(errChan)
 		}()
@@ -174,7 +181,7 @@ func (client RoutesClient) DeletePreparer(resourceGroupName string, routeTableNa
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -201,13 +208,14 @@ func (client RoutesClient) DeleteResponder(resp *http.Response) (result autorest
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusAccepted, http.StatusOK, http.StatusNoContent),
+		azure.WithErrorUnlessStatusCode(http.StatusNoContent, http.StatusAccepted, http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
 	return
 }
 
-// Get gets the specified route from a route table.
+// Get the Get route operation retreives information about the specified route
+// from the route table.
 //
 // resourceGroupName is the name of the resource group. routeTableName is the
 // name of the route table. routeName is the name of the route.
@@ -242,7 +250,7 @@ func (client RoutesClient) GetPreparer(resourceGroupName string, routeTableName 
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -274,7 +282,8 @@ func (client RoutesClient) GetResponder(resp *http.Response) (result Route, err 
 	return
 }
 
-// List gets all routes in a route table.
+// List the List network security rule opertion retrieves all the routes in a
+// route table.
 //
 // resourceGroupName is the name of the resource group. routeTableName is the
 // name of the route table.
@@ -308,7 +317,7 @@ func (client RoutesClient) ListPreparer(resourceGroupName string, routeTableName
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2017-03-01"
+	const APIVersion = "2015-05-01-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -362,4 +371,49 @@ func (client RoutesClient) ListNextResults(lastResults RouteListResult) (result 
 	}
 
 	return
+}
+
+// ListComplete gets all elements from the list without paging.
+func (client RoutesClient) ListComplete(resourceGroupName string, routeTableName string, cancel <-chan struct{}) (<-chan Route, <-chan error) {
+	resultChan := make(chan Route)
+	errChan := make(chan error, 1)
+	go func() {
+		defer func() {
+			close(resultChan)
+			close(errChan)
+		}()
+		list, err := client.List(resourceGroupName, routeTableName)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		if list.Value != nil {
+			for _, item := range *list.Value {
+				select {
+				case <-cancel:
+					return
+				case resultChan <- item:
+					// Intentionally left blank
+				}
+			}
+		}
+		for list.NextLink != nil {
+			list, err = client.ListNextResults(list)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			if list.Value != nil {
+				for _, item := range *list.Value {
+					select {
+					case <-cancel:
+						return
+					case resultChan <- item:
+						// Intentionally left blank
+					}
+				}
+			}
+		}
+	}()
+	return resultChan, errChan
 }

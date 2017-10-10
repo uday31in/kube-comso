@@ -11,14 +11,18 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"mime"
 	"mime/multipart"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"regexp"
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/golang/glog"
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -27,13 +31,16 @@ import (
 const (
 	// DefaultBaseURL is the domain name used for storage requests in the
 	// public cloud when a default client is created.
-	DefaultBaseURL = "core.windows.net"
+	DefaultBaseURL = "local.azurestack.external"
 
 	// DefaultAPIVersion is the Azure Storage API version string used when a
 	// basic client is created.
-	DefaultAPIVersion = "2016-05-31"
+	//DefaultAPIVersion = "2016-05-31"
 
-	defaultUseHTTPS = true
+	//Azure stack Version
+	DefaultAPIVersion = "2015-04-05"
+
+	defaultUseHTTPS = false
 
 	// StorageEmulatorAccountName is the fixed storage account used by Azure Storage Emulator
 	StorageEmulatorAccountName = "devstoreaccount1"
@@ -75,6 +82,13 @@ type DefaultSender struct {
 
 // Send is the default retry strategy in the client
 func (ds *DefaultSender) Send(c *Client, req *http.Request) (resp *http.Response, err error) {
+
+	dump, err := httputil.DumpRequestOut(req, true)
+	if err != nil {
+		log.Fatal(err)
+	}
+	glog.V(4).Infof("%q", dump)
+
 	b := []byte{}
 	if req.Body != nil {
 		b, err = ioutil.ReadAll(req.Body)
@@ -95,6 +109,13 @@ func (ds *DefaultSender) Send(c *Client, req *http.Request) (resp *http.Response
 		ds.attempts = attempts
 	}
 	ds.attempts++
+
+	dumpresp, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		log.Fatal(err)
+	}
+	glog.V(4).Infof("%q", dumpresp)
+
 	return resp, err
 }
 
@@ -191,6 +212,7 @@ func NewBasicClient(accountName, accountKey string) (Client, error) {
 	if accountName == StorageEmulatorAccountName {
 		return NewEmulatorClient()
 	}
+	glog.V(4).Info("Inside NewBasicClient with API Version %s", DefaultAPIVersion)
 	return NewClient(accountName, accountKey, DefaultBaseURL, DefaultAPIVersion, defaultUseHTTPS)
 }
 
@@ -213,6 +235,9 @@ func NewEmulatorClient() (Client, error) {
 // to specify whether to use HTTPS, a specific REST API version or a custom
 // storage endpoint than Azure Public Cloud.
 func NewClient(accountName, accountKey, blobServiceBaseURL, apiVersion string, useHTTPS bool) (Client, error) {
+
+	glog.V(4).Infof("Inside NewClient with Account Name: %s, Account Key: %s, blobServiceBaseURL: %s, API Version %s, useHTTPS:%s ", accountName, accountKey, blobServiceBaseURL, apiVersion, useHTTPS)
+
 	var c Client
 	if !IsValidStorageAccount(accountName) {
 		return c, fmt.Errorf("azure: account name is not valid: it must be between 3 and 24 characters, and only may contain numbers and lowercase letters: %v", accountName)
@@ -221,6 +246,8 @@ func NewClient(accountName, accountKey, blobServiceBaseURL, apiVersion string, u
 	} else if blobServiceBaseURL == "" {
 		return c, fmt.Errorf("azure: base storage service url required")
 	}
+
+	glog.V(4).Infof("IsValidStorageAccount - Success. Account Key: %s", accountKey)
 
 	key, err := base64.StdEncoding.DecodeString(accountKey)
 	if err != nil {
@@ -248,6 +275,8 @@ func NewClient(accountName, accountKey, blobServiceBaseURL, apiVersion string, u
 		},
 	}
 	c.userAgent = c.getDefaultUserAgent()
+
+	glog.V(4).Info("Inside NewClient with API Version Success")
 	return c, nil
 }
 
@@ -258,6 +287,14 @@ func IsValidStorageAccount(account string) bool {
 }
 
 func (c Client) getDefaultUserAgent() string {
+
+	glog.V(4).Infof("Inside GoDefault User Agent: Go/%s (%s-%s) azure-storage-go/%s api-version/%s",
+		runtime.Version(),
+		runtime.GOARCH,
+		runtime.GOOS,
+		sdkVersion,
+		c.apiVersion)
+
 	return fmt.Sprintf("Go/%s (%s-%s) azure-storage-go/%s api-version/%s",
 		runtime.Version(),
 		runtime.GOARCH,
